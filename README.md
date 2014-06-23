@@ -7,3 +7,4 @@ SnivellingGit
 
 * http://tonsky.me/blog/reinventing-git-interface/
 * http://marklodato.github.io/visual-git-guide/index-en.html
+* https://github.com/libgit2/libgit2sharp/wiki/LibGit2Sharp-Hitchhiker%27s-Guide-to-Git
