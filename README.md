@@ -1,8 +1,7 @@
 SnivellingGit
 =============
 
-An experimental GUI for the Git SCM.
-
+[![Build status](https://ci.appveyor.com/api/projects/status/6k8rb18w3e3gagqs)](https://ci.appveyor.com/project/i-e-b/snivellinggit) An experimental GUI for the Git SCM.
 
 ### References
 
