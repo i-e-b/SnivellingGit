@@ -7,14 +7,19 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Sg.Unit.Tests", "src\Sg.Uni
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		AppVeyor|Any CPU = AppVeyor|Any CPU
 		Debug|Any CPU = Debug|Any CPU
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{D251ACD4-2424-4B0D-B443-F06517233150}.AppVeyor|Any CPU.ActiveCfg = AppVeyor|Any CPU
+		{D251ACD4-2424-4B0D-B443-F06517233150}.AppVeyor|Any CPU.Build.0 = AppVeyor|Any CPU
 		{D251ACD4-2424-4B0D-B443-F06517233150}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{D251ACD4-2424-4B0D-B443-F06517233150}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{D251ACD4-2424-4B0D-B443-F06517233150}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{D251ACD4-2424-4B0D-B443-F06517233150}.Release|Any CPU.Build.0 = Release|Any CPU
+		{14CBDCF3-A8A1-4543-BCA5-A5BA6C2B010C}.AppVeyor|Any CPU.ActiveCfg = AppVeyor|Any CPU
+		{14CBDCF3-A8A1-4543-BCA5-A5BA6C2B010C}.AppVeyor|Any CPU.Build.0 = AppVeyor|Any CPU
 		{14CBDCF3-A8A1-4543-BCA5-A5BA6C2B010C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{14CBDCF3-A8A1-4543-BCA5-A5BA6C2B010C}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{14CBDCF3-A8A1-4543-BCA5-A5BA6C2B010C}.Release|Any CPU.ActiveCfg = Release|Any CPU

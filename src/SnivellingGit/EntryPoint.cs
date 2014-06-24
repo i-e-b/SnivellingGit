@@ -26,11 +26,24 @@
         /// </summary>
         public void Run()
         {
-            var d = @"C:\Gits\SnivellingGit"; //fs.Directory.GetCurrentDirectory();
-            using (var repo = new Repository(d))
+            //using (var repo = new Repository(@"C:\Gits\VsVim"))
+            using (var repo = new Repository(@"C:\Gits\SnivellingGit"))
             {
                 Console.WriteLine("That repo has " + repo.Commits.Count() + " commits");
+                Console.WriteLine("  with branches " + string.Join(", ", repo.Branches.Select(b => b.CanonicalName)));
+                Console.WriteLine("  currently on " + repo.Head.CanonicalName);
+                Console.WriteLine("  tags: " + string.Join(", ", repo.Tags.Select(t => t.Name)));
+                Console.WriteLine();
+
+                //repo.Branches.Where(b=>!b.IsRemote).Select
+
+                foreach (var commit in repo.Commits)
+                {
+                    Console.WriteLine(commit.Sha + " " + commit.Author.Name + " -> " + commit.Message.Replace("\r", "").Replace("\n", " "));
+                    Console.WriteLine("   " + string.Join(", ", commit.Parents.Select(p => p.Sha)));
+                }
             }
         }
     }
+
 }
