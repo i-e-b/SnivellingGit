@@ -8,15 +8,15 @@
     [TestFixture]
     public class TreeViewTests
     {
-        CommitGraph _subject;
+        ICommitGraph _subject;
 
         [SetUp]
         public void setup()
         {
-            _subject = new CommitGraph();
-            _subject.AddBranch("a", "A", 2);
-            _subject.AddBranch("d", "D", 1);
-            _subject.AddBranch("g", "G", 3);
+            _subject = new ColumnsCommitGraph();
+            _subject.AddBranch("d", "D", "");
+            _subject.AddBranch("a", "A", "");
+            _subject.AddBranch("g", "G", "");
 
             _subject.AddCommit("A", "msg", "B");
             _subject.AddCommit("B", "msg", "C", "D");
@@ -30,19 +30,19 @@
         [Test]
         public void column_1_contains_D_and_E()
         {
-            Assert.That(_subject.Cells.Where(c => c.Column == 1).Select(c => c.Id).SequenceEqual(new[] { "D", "E" }));
+            Assert.That(_subject.Cells().Where(c => c.Column == 1).Select(c => c.Id).SequenceEqual(new[] { "D", "E" }));
         }
 
         [Test]
         public void column_2_contains_A_B_C_F()
         {
-            Assert.That(_subject.Cells.Where(c => c.Column == 2).Select(c => c.Id).SequenceEqual(new[] { "A", "B", "C", "F" }));
+            Assert.That(_subject.Cells().Where(c => c.Column == 2).Select(c => c.Id).SequenceEqual(new[] { "A", "B", "C", "F" }));
         }
 
         [Test]
         public void column_3_contains_G()
         {
-            Assert.That(_subject.Cells.Where(c => c.Column == 3).Select(c => c.Id).SequenceEqual(new[] { "G" }));
+            Assert.That(_subject.Cells().Where(c => c.Column == 3).Select(c => c.Id).SequenceEqual(new[] { "G" }));
         }
 
         [Test]

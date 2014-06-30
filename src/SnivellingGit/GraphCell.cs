@@ -1,5 +1,7 @@
 ﻿namespace SnivellingGit
 {
+    using System.Collections.Generic;
+
     /// <summary>
     /// Visual layout of a commit.
     /// </summary>
@@ -29,5 +31,10 @@
         /// True if a merge of two commits in the same branch
         /// </summary>
         public bool FlatMerge { get; set; }
+
+        /// <summary>
+        /// Columns of all parents (for showing merge origins)
+        /// </summary>
+        public IEnumerable<int> ParentCols { get; set; }
     }
 }

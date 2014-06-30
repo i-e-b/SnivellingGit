@@ -84,6 +84,7 @@
     <Compile Include="CommitGraph.cs" />
     <Compile Include="EntryPoint.cs" />
     <Compile Include="GraphCell.cs" />
+    <Compile Include="ICommitGraph.cs" />
     <Compile Include="IEntryPoint.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
