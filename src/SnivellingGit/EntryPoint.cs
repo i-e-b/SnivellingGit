@@ -49,21 +49,30 @@
 
                 foreach (var commit in repo.Commits)
                 {
-                    table.AddCommit(commit.Sha, commit.Parents.Select(p => p.Sha).ToArray());
+                    table.AddCommit(commit.Sha, commit.Message, commit.Parents.Select(p => p.Sha).ToArray());
                     //table.AddCommit(commit.Author.When, commit.Author.Name, commit.Message, commit.Sha, commit.Parents.Select(p => p.Sha).ToArray());
 
                     //Console.WriteLine(commit.Sha + " -> " + string.Join(", ", commit.Parents.Select(p => p.Sha)));
                     //Console.WriteLine(commit.Author.Name + " -> " + commit.Message.Replace("\r", "").Replace("\n", " "));
                 }
 
+                //var limit = 100;
                 foreach (var cell in table.Cells)
                 {
+                    //if (limit-- < 0) break;
+
                     Console.Write(new string(' ', cell.Column));
-                    Console.Write("#");
+                    Console.Write(cell.FlatMerge ? "." : (cell.IsMerge ? "o" : "#"));
                     Console.Write(new string(' ', 20 - (cell.Column)));
-                    Console.WriteLine(cell.Id);
+                    Console.WriteLine(Cleanup(cell.Message));
                 }
             }
+        }
+
+        static string Cleanup(string message)
+        {
+            var msg = message.Replace("\r", "").Replace("\n", " ").Replace("\t", " ");
+            return msg.Substring(0, Math.Min(Console.BufferWidth - 30, msg.Length));
         }
     }
 

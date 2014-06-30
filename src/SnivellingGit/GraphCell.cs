@@ -14,5 +14,20 @@
         /// Identifier of commit
         /// </summary>
         public string Id { get; set; }
+
+        /// <summary>
+        /// True if commit has more than one parent
+        /// </summary>
+        public bool IsMerge { get; set; }
+
+        /// <summary>
+        /// Commit message
+        /// </summary>
+        public string Message { get; set; }
+
+        /// <summary>
+        /// True if a merge of two commits in the same branch
+        /// </summary>
+        public bool FlatMerge { get; set; }
     }
 }
