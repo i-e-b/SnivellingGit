@@ -18,13 +18,13 @@
             _subject.AddBranch("d", "D", 1);
             _subject.AddBranch("g", "G", 3);
 
-            _subject.AddCommit("A", "B");
-            _subject.AddCommit("B", "C", "D");
-            _subject.AddCommit("D", "E");
-            _subject.AddCommit("C", "G", "F");
-            _subject.AddCommit("E", "F");
-            _subject.AddCommit("G", "F");
-            _subject.AddCommit("F", "");
+            _subject.AddCommit("A", "msg", "B");
+            _subject.AddCommit("B", "msg", "C", "D");
+            _subject.AddCommit("D", "msg", "E");
+            _subject.AddCommit("C", "msg", "G", "F");
+            _subject.AddCommit("E", "msg", "F");
+            _subject.AddCommit("G", "msg", "F");
+            _subject.AddCommit("F", "msg", "");
         }
 
         [Test]
