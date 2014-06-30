@@ -63,11 +63,17 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="DummyTest.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="TreeViewTests.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\SnivellingGit\SnivellingGit.csproj">
+      <Project>{D251ACD4-2424-4B0D-B443-F06517233150}</Project>
+      <Name>SnivellingGit</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

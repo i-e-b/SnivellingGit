@@ -27,7 +27,7 @@
         /// </summary>
         public void Run()
         {
-            var table = new CommitTable();
+            var table = new CommitGraph();
             using (var repo = new Repository(@"C:\Gits\VsVim"))
             //using (var repo = new Repository(@"C:\Gits\SnivellingGit"))
             {
@@ -37,16 +37,31 @@
                 Console.WriteLine("  tags: " + string.Join(", ", repo.Tags.Select(t => t.Name)));
                 Console.WriteLine();
 
-                foreach (var branch in repo.Branches.Where(b=>!b.IsRemote))
+                var col = 0;
+                foreach (var branch in repo.Branches/*.Where(b=>!b.IsRemote)*/)
                 {
-                    table.AddBranch(branch.Tip.Sha, branch.CanonicalName);
+                    //var common = branch.TrackingDetails.CommonAncestor;
+                    //var tide = (common == null) ? ("") : (common.Sha);
+                    table.AddBranch(branch.CanonicalName, branch.Tip.Sha, col/*tide*/);
+                    //Console.WriteLine(col + " -> " + branch.Tip.Sha);
+                    col++;
                 }
 
                 foreach (var commit in repo.Commits)
                 {
-                    table.AddCommit(commit.Author.When, commit.Author.Name, commit.Message, commit.Sha, commit.Parents.Select(p => p.Sha).ToArray());
+                    table.AddCommit(commit.Sha, commit.Parents.Select(p => p.Sha).ToArray());
+                    //table.AddCommit(commit.Author.When, commit.Author.Name, commit.Message, commit.Sha, commit.Parents.Select(p => p.Sha).ToArray());
 
-                    Console.WriteLine(commit.Author.Name + " -> " + commit.Message.Replace("\r", "").Replace("\n", " "));
+                    //Console.WriteLine(commit.Sha + " -> " + string.Join(", ", commit.Parents.Select(p => p.Sha)));
+                    //Console.WriteLine(commit.Author.Name + " -> " + commit.Message.Replace("\r", "").Replace("\n", " "));
+                }
+
+                foreach (var cell in table.Cells)
+                {
+                    Console.Write(new string(' ', cell.Column));
+                    Console.Write("#");
+                    Console.Write(new string(' ', 20 - (cell.Column)));
+                    Console.WriteLine(cell.Id);
                 }
             }
         }
@@ -62,7 +77,8 @@
         /// </summary>
         /// <param name="tipSha1">sha1 hash of the branch tip. Should be child-less</param>
         /// <param name="name">Name of the branch</param>
-        public void AddBranch(string tipSha1, string name)
+        /// <param name="tideLineSha1">the most recent common ancestor between local and remote. Changes to this or its parents will require a force push.</param>
+        public void AddBranch(string tipSha1, string name, string tideLineSha1)
         {
             /*
              * The plan:
@@ -74,6 +90,7 @@
              *   Anything behind it is tricky, rebases, splits and squashes will need to be forced,
              *   and should not be handled in the first version
              */
+            Console.WriteLine("Add branch " + name + " / " + tipSha1 + " / " + tideLineSha1);
         }
 
         /// <summary>
