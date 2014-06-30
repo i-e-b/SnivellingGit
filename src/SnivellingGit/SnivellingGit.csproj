@@ -82,6 +82,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="CommitGraph.cs" />
+    <Compile Include="CommitPoint.cs" />
     <Compile Include="EntryPoint.cs" />
     <Compile Include="GraphCell.cs" />
     <Compile Include="ICommitGraph.cs" />

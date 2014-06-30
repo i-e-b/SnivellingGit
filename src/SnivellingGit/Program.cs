@@ -11,8 +11,8 @@
             Configure();
             Run();
 
-            Console.WriteLine("Done. Press [enter] to exit");
-            Console.ReadLine();
+            //Console.WriteLine("Done. Press [enter] to exit");
+            //Console.ReadLine();
         }
 
         static void Run()
