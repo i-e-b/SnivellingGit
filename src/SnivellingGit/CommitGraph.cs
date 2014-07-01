@@ -71,8 +71,10 @@
                 _idColumns[c.Parents[1]] += 1;
             }
 
-            // this is 'squishing' the flat merges:
-            if (!flatMerge || !SquashFlatMerges) 
+            var branchNames = LookupOrEmpty(_refs, c.Id);
+
+            // this is 'squishing' the flat merges. Don't display merges on the same branch, unless they have a ref pointing at them.
+            if (branchNames.Any() || !flatMerge || !SquashFlatMerges) 
             {
                 _cells.Add(new GraphCell
                 {
@@ -81,7 +83,7 @@
                     IsMerge = c.Parents.Length > 1,
                     FlatMerge = flatMerge,
                     ParentCols = c.Parents.Select(p=>_idColumns[p]),
-                    BranchNames = LookupOrEmpty(_refs, c.Id)
+                    BranchNames = branchNames
                 });
             }
         }
@@ -96,7 +98,7 @@
         }
 
 
-        static IEnumerable<string> LookupOrEmpty(IReadOnlyDictionary<string, List<string>> refs, string key)
+        static IList<string> LookupOrEmpty(IReadOnlyDictionary<string, List<string>> refs, string key)
         {
             if (!refs.ContainsKey(key)) return new string[0];
             return refs[key];

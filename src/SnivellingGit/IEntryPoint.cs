@@ -6,8 +6,8 @@
     public interface IEntryPoint
     {
         /// <summary>
-        /// Start a host from the current directory
+        /// Render a repository view from the given directory (should be a git root path or .git directory)
         /// </summary>
-        void Run();
+        string Render(string path);
     }
 }

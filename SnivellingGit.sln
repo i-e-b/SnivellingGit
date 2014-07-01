@@ -10,6 +10,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "_Info", "_Info", "{941BA215
 		README.md = README.md
 	EndProjectSection
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Sg.Web", "src\Sg.Web\Sg.Web.csproj", "{D4CB402E-A876-4FAD-84A6-BD163E15E154}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		AppVeyor|Any CPU = AppVeyor|Any CPU
@@ -29,6 +31,12 @@ Global
 		{14CBDCF3-A8A1-4543-BCA5-A5BA6C2B010C}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{14CBDCF3-A8A1-4543-BCA5-A5BA6C2B010C}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{14CBDCF3-A8A1-4543-BCA5-A5BA6C2B010C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D4CB402E-A876-4FAD-84A6-BD163E15E154}.AppVeyor|Any CPU.ActiveCfg = Release|Any CPU
+		{D4CB402E-A876-4FAD-84A6-BD163E15E154}.AppVeyor|Any CPU.Build.0 = Release|Any CPU
+		{D4CB402E-A876-4FAD-84A6-BD163E15E154}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D4CB402E-A876-4FAD-84A6-BD163E15E154}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D4CB402E-A876-4FAD-84A6-BD163E15E154}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D4CB402E-A876-4FAD-84A6-BD163E15E154}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

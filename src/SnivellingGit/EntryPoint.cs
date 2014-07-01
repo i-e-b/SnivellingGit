@@ -1,8 +1,10 @@
 ﻿namespace SnivellingGit
 {
     using System;
+    using System.IO;
     using System.IO.Abstractions;
     using System.Linq;
+    using System.Text;
     using LibGit2Sharp;
 
     /// <summary>
@@ -24,82 +26,96 @@
         /// <summary>
         /// Start a host from the current directory
         /// </summary>
-        public void Run()
+        public string Render(string path)
         {
-            ICommitGraph table = new ColumnsCommitGraph { 
-                ShowVirtualBranches = true,     // show merges inside the same branch as if they were in different branches (each side gets it's own column)
-                SquashFlatMerges = false         // hide merges inside the same branch
-            };
-            //using (var repo = new Repository(@"C:\Gits\VsVim"))
-            //using (var repo = new Repository(@"C:\Gits\SnivellingGit"))
-            using (var repo = new Repository(@"C:\Gits\repo-sample"))
+            ICommitGraph table = new ColumnsCommitGraph
             {
-                Console.WriteLine("That repo has " + repo.Commits.Count() + " commits");
-                Console.WriteLine("  with branches " + string.Join(", ", repo.Branches.Select(b => b.CanonicalName)));
-                Console.WriteLine("  currently on " + repo.Head.CanonicalName);
-                Console.WriteLine("  tags: " + string.Join(", ", repo.Tags.Select(t => t.Name)));
-                Console.WriteLine();
+                ShowVirtualBranches = false,     // show merges inside the same branch as if they were in different branches (each side gets it's own column)
+                SquashFlatMerges = true         // hide merges inside the same branch
+            };
 
+            using (var repo = new Repository(path))
+            {
                 BuildCommitGraph(repo, table);
-                RenderCommitGraphToHtml(@"C:\Temp\GitTable.html", table, rowLimit: -1);
+
+                var f = new StringWriter();
+                WriteHtmlHeader(f);
+
+                f.WriteLine("<p>Undergoing operation " + repo.Info.CurrentOperation + "</p>");
+                f.WriteLine("<p>" + repo.Commits.Count() + " commits</p>");
+                f.WriteLine("<p>  currently on " + repo.Head.CanonicalName + "</p>");
+                f.WriteLine("<p>&middot;branches " + string.Join(", ", repo.Branches.Select(b => b.CanonicalName)) + ";</p>");
+                f.WriteLine("<p>&middot;tags: " + string.Join(", ", repo.Tags.Select(t => t.Name)) + ";</p>");
+
+                RenderCommitGraphToHtml(f, table, rowLimit: -1);
+                WriteHtmlFooter(f);
+
+                return f.ToString();
             }
         }
 
-        void RenderCommitGraphToHtml(string target, ICommitGraph table, int rowLimit)
+        static void WriteHtmlFooter(TextWriter f)
+        {
+            f.Write("</body></html>");
+        }
+
+        static void WriteHtmlHeader(TextWriter f)
+        {
+            f.WriteLine("<html><head><title>Log</title><style>");
+            f.WriteLine(".flat {margin-left:10px;width:4px;height:4px;background:#aaa;}");
+            f.WriteLine(".fullMerge {margin-left:8px;width:10px;height:10px;background:#ccc;border-radius:5px;-moz-border-radius:5px;-webkit-border-radius:5px;}");
+            f.WriteLine(".commit {width:24px;height:16px;border-radius:5px;-moz-border-radius:5px;-webkit-border-radius:5px;}");
+            f.WriteLine(".line {border-left: 2px solid #eee;height: 16px;margin-left: 11px;margin-right: 11px;}"); // vertical line to join commits
+            f.WriteLine("</style></head><body>");
+        }
+
+        static void RenderCommitGraphToHtml(TextWriter f, ICommitGraph table, int rowLimit)
         {
             var maxWidth = table.Cells().Select(c => c.Column).Max() + 1;
-            using (var f = fs.File.CreateText(target))
+            f.WriteLine("<table>");
+            foreach (var cell in table.Cells())
             {
-                f.WriteLine("<html><head><title>Log</title><style>");
-                f.WriteLine(".flat {margin-left:10px;width:4px;height:4px;background:#aaa;}");
-                f.WriteLine(".fullMerge {margin-left:8px;width:10px;height:10px;background:#ccc;border-radius:5px;-moz-border-radius:5px;-webkit-border-radius:5px;}");
-                f.WriteLine(".commit {width:24px;height:16px;border-radius:5px;-moz-border-radius:5px;-webkit-border-radius:5px;}");
-                f.WriteLine(".line {border-left: 2px solid #eee;height: 16px;margin-left: 11px;margin-right: 11px;}"); // vertical line to join commits
-                f.WriteLine("</style></head><body><table>");
-                foreach (var cell in table.Cells())
+                f.Write("\r\n<tr>");
+                if (rowLimit-- == 0) break;
+
+                f.Write("<td>" + string.Join(", ", cell.BranchNames) + "</td>");
+
+                if (cell.IsMerge)
                 {
-                    f.Write("\r\n<tr>");
-                    if (rowLimit-- == 0) break;
-
-                    f.Write("<td>" + string.Join(", ", cell.BranchNames) + "</td>");
-
-                    if (cell.IsMerge)
+                    f.Write("<td colspan='" + cell.Column + "'/>");
+                    if (cell.FlatMerge)
                     {
-                        f.Write("<td colspan='" + cell.Column + "'/>");
-                        if (cell.FlatMerge)
-                        {
-                            f.Write("<td><div class='flat'></div></td>");
-                        }
-                        else
-                        {
-                            f.Write("<td><div class='fullMerge'></div></td>");
-                        }
-                        f.Write("<td colspan='" + (maxWidth - cell.Column) + "'/>");
-
-                        f.Write("<td rowspan='2'>" + Cleanup(cell.CommitPoint.Message) + "</td>");
-                        // to do: merge lines
-
-                        f.WriteLine("</tr><td></td>");
-                        for (int i = 0; i < maxWidth; i++)
-                        {
-                            if (cell.ParentCols.Contains(i)) f.Write("<td><div class='line'></div></td>");
-                            else f.Write("<td></td>");
-                        }
-                        f.WriteLine();
-                        f.Write("<tr>");
+                        f.Write("<td><div class='flat'></div></td>");
                     }
                     else
                     {
-                        f.Write("<td colspan='" + cell.Column + "'/>");
-                        f.Write("<td><div class='commit' style='background:#"+cell.CommitPoint.Colour+"' title='"+cell.CommitPoint.Author+"'></div></td>"); // to do: colourise
-                        f.Write("<td colspan='" + (maxWidth - cell.Column) + "'/>");
-                        f.Write("<td>" + Cleanup(cell.CommitPoint.Message) + "</td>");
+                        f.Write("<td><div class='fullMerge'></div></td>");
                     }
+                    f.Write("<td colspan='" + (maxWidth - cell.Column) + "'/>");
 
-                    f.Write("</tr>");
+                    f.Write("<td rowspan='2'>" + Cleanup(cell.CommitPoint.Message) + "</td>");
+                    // to do: merge lines
+
+                    f.WriteLine("</tr><td></td>");
+                    for (int i = 0; i < maxWidth; i++)
+                    {
+                        if (cell.ParentCols.Contains(i)) f.Write("<td><div class='line'></div></td>");
+                        else f.Write("<td></td>");
+                    }
+                    f.WriteLine();
+                    f.Write("<tr>");
                 }
-                f.Write("</table></body></html>");
+                else
+                {
+                    f.Write("<td colspan='" + cell.Column + "'/>");
+                    f.Write("<td><div class='commit' style='background:#" + cell.CommitPoint.Colour + "' title='" + cell.CommitPoint.Author + "'></div></td>"); // to do: colourise
+                    f.Write("<td colspan='" + (maxWidth - cell.Column) + "'/>");
+                    f.Write("<td>" + Cleanup(cell.CommitPoint.Message) + "</td>");
+                }
+
+                f.Write("</tr>");
             }
+            f.Write("</table>");
         }
 
         static void BuildCommitGraph(IRepository repo, ICommitGraph table)

@@ -17,7 +17,7 @@
 
         static void Run()
         {
-            ObjectFactory.GetInstance<IEntryPoint>().Run();
+            ObjectFactory.GetInstance<IEntryPoint>().Render(@"C:\Gits\repo-sample");
         }
 
         static void Configure()
