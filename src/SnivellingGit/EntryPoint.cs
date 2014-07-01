@@ -27,11 +27,12 @@
         public void Run()
         {
             ICommitGraph table = new ColumnsCommitGraph { 
-                ShowVirtualBranches = false,     // show merges inside the same branch as if they were in different branches (each side gets it's own column)
-                SquashFlatMerges = true         // hide merges inside the same branch
+                ShowVirtualBranches = true,     // show merges inside the same branch as if they were in different branches (each side gets it's own column)
+                SquashFlatMerges = false         // hide merges inside the same branch
             };
-            using (var repo = new Repository(@"C:\Gits\VsVim"))
+            //using (var repo = new Repository(@"C:\Gits\VsVim"))
             //using (var repo = new Repository(@"C:\Gits\SnivellingGit"))
+            using (var repo = new Repository(@"C:\Gits\repo-sample"))
             {
                 Console.WriteLine("That repo has " + repo.Commits.Count() + " commits");
                 Console.WriteLine("  with branches " + string.Join(", ", repo.Branches.Select(b => b.CanonicalName)));
@@ -39,10 +40,7 @@
                 Console.WriteLine("  tags: " + string.Join(", ", repo.Tags.Select(t => t.Name)));
                 Console.WriteLine();
 
-                
-
                 BuildCommitGraph(repo, table);
-                //RenderCommitGraphToConsole(table, rowLimit: -1);
                 RenderCommitGraphToHtml(@"C:\Temp\GitTable.html", table, rowLimit: -1);
             }
         }
@@ -104,37 +102,6 @@
             }
         }
 
-        static void RenderCommitGraphToConsole(ICommitGraph table, int rowLimit)
-        {
-            var maxWidth = table.Cells().Select(c => c.Column).Max() + 1;
-            foreach (var cell in table.Cells())
-            {
-                if (rowLimit-- == 0) break;
-
-                if (cell.IsMerge)
-                {
-                    Console.Write(new string(' ', cell.Column));
-                    Console.Write(cell.FlatMerge ? "." : "o");
-                    Console.Write(new string(' ', maxWidth - (cell.Column)));
-                    Console.WriteLine(Cleanup(cell.CommitPoint.Message, maxWidth));
-                    for (var i = 0; i < maxWidth; i++)
-                    {
-                        if (cell.ParentCols.Contains(i)) Console.Write('|');
-                        else Console.Write(' ');
-                    }
-                    Console.WriteLine();
-                }
-                else
-                {
-                    Console.Write(new string(' ', cell.Column));
-                    Console.Write("#");
-                    Console.Write(new string(' ', maxWidth - (cell.Column)));
-                    Console.WriteLine(Cleanup(cell.CommitPoint.Message, maxWidth));
-                }
-
-            }
-        }
-
         static void BuildCommitGraph(IRepository repo, ICommitGraph table)
         {
             foreach (var branch in repo.Branches /*.Where(b=>!b.IsRemote)*/)
@@ -155,52 +122,6 @@
             var msg = message.Replace("\r", "").Replace("\n", " ").Replace("\t", " ");
             if (width <= 0) return msg;
             return msg.Substring(0, Math.Min(Console.BufferWidth - width - 10, msg.Length));
-        }
-    }
-
-    /// <summary>
-    /// Experimental
-    /// </summary>
-    public class CommitTable
-    {
-        /// <summary>
-        /// Add a branch column
-        /// </summary>
-        /// <param name="tipSha1">sha1 hash of the branch tip. Should be child-less</param>
-        /// <param name="name">Name of the branch</param>
-        /// <param name="tideLineSha1">the most recent common ancestor between local and remote. Changes to this or its parents will require a force push.</param>
-        public void AddBranch(string tipSha1, string name, string tideLineSha1)
-        {
-            /*
-             * The plan:
-             * 
-             * Each commit is a column. Remotes not shown by default.
-             * Local-only branches should be picked out visually.
-             * We also want a 'tide-line' showing where the tracking remote ends --
-             *   anything ahead of the tide line is safe and won't require a force-push.
-             *   Anything behind it is tricky, rebases, splits and squashes will need to be forced,
-             *   and should not be handled in the first version
-             */
-            Console.WriteLine("Add branch " + name + " / " + tipSha1 + " / " + tideLineSha1);
-        }
-
-        /// <summary>
-        /// Add a commit to the table rows
-        /// </summary>
-        /// <param name="when">Date of commit</param>
-        /// <param name="who">author name</param>
-        /// <param name="what">commit short message</param>
-        /// <param name="sha1">Hash of this commit</param>
-        /// <param name="parents">Parents of this commit</param>
-        public void AddCommit(DateTimeOffset when, string who, string what, string sha1, string[] parents)
-        {
-            /*
-             * The plan:
-             * 
-             * Visually, we want the childless commits at the top, then a table of children going down.
-             * Each branch should have its own column (we might not show all of them)
-             * Ignore orphaned commits at the moment -- we should pick these up later
-             */
         }
     }
 
