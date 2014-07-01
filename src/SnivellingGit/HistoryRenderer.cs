@@ -41,10 +41,11 @@
 
                 var outp = new StringWriter();
                 WriteHtmlHeader(outp);
-
+ /*
                 var status = repo.Index.RetrieveStatus();
                 var wc = repo.Diff.Compare<TreeChanges>();
 
+               
                 var stg = string.Join(", ", status.Staged.Select(s=>s.FilePath));
 
                 outp.WriteLine("<p>Working copy: " + wc.Added.Count() + " added, " + wc.Deleted.Count() + " deleted, " + wc.Modified.Count() + " modified.</p>");
@@ -54,9 +55,10 @@
                 outp.WriteLine("<p>" + SafeEnumerate(repo.Commits).Count() + " commits</p>");
                 outp.WriteLine("<p>  currently on " + repo.Head.CanonicalName + "</p>");
                 outp.WriteLine("<p>&middot;branches " + string.Join(", ", repo.Branches.Select(b => b.CanonicalName)) + ";</p>");
-                outp.WriteLine("<p>&middot;tags: " + string.Join(", ", repo.Tags.Select(t => t.Name)) + ";</p>");
+                outp.WriteLine("<p>&middot;tags: " + string.Join(", ", repo.Tags.Select(t => t.Name)) + ";</p>");*/
 
-                RenderCommitGraphToHtml(outp, table, rowLimit: -1);
+                //RenderCommitGraphToHtml(outp, table, rowLimit: -1);
+                WriteGraphJson(outp, table);
                 WriteHtmlFooter(outp);
 
                 return outp.ToString();
@@ -65,17 +67,81 @@
 
         static void WriteHtmlFooter(TextWriter f)
         {
-            f.Write("</body></html>");
+            f.WriteLine(@"<script>
+function draw() {
+    var renderer = new dagreD3.Renderer();
+    var layout = renderer.run(dagreD3.json.decode(commits, edges), d3.select('svg g'));
+}
+</script>");
+            f.WriteLine("</body></html>");
         }
 
         static void WriteHtmlHeader(TextWriter f)
         {
-            f.WriteLine("<html><head><title>Log</title><style>");
-            f.WriteLine(".flat {margin-left:10px;width:4px;height:4px;background:#aaa;}");
-            f.WriteLine(".fullMerge {margin-left:8px;width:10px;height:10px;background:#ccc;border-radius:5px;-moz-border-radius:5px;-webkit-border-radius:5px;}");
-            f.WriteLine(".commit {width:24px;height:16px;border-radius:5px;-moz-border-radius:5px;-webkit-border-radius:5px;}");
-            f.WriteLine(".line {border-left: 2px solid #aaa;height: 16px;margin-left: 11px;margin-right: 11px;}"); // vertical line to join commits
-            f.WriteLine("</style></head><body>");
+            f.WriteLine("<html><head><title>Log</title>");
+            f.WriteLineAsync("<script src=\"/?js\"></script>");
+            f.WriteLineAsync("<style>");
+            f.WriteLine(@"
+svg{border:none;overflow:visible}
+
+text {
+  font-weight: 300;
+  font-family: Helvetica, Arial, sans-serf;
+  font-size: 14px;
+}
+
+.node rect {
+  stroke-width: 2px;
+  stroke: #333;
+  fill: #fff;
+}
+
+#node-CLOSED rect {
+  fill: #f77;
+}
+
+#node-ESTAB rect {
+  fill: #7f7;
+}
+
+.edgeLabel rect {
+  fill: #fff;
+}
+
+.edgePath path {
+  stroke: #333;
+  stroke-width: 1.5px;
+  fill: none;
+}
+");
+            f.WriteLine("</style></head>");
+            f.WriteLine("<body onload='draw();'>");
+            f.WriteLine("<svg width='100%' height='100%'><g transform='translate(20,20)'/></svg>");
+
+        }
+
+        static void WriteGraphJson(TextWriter outp, ICommitGraph table)
+        {
+            outp.WriteLine("<script>");
+
+            // Write this out directly. Add colour and/or gravatar of author.
+            outp.Write("var commits = [");
+            outp.Write(string.Join(", ", table.Cells().Select(c=>"\"" + c.CommitPoint.Id + "\"")));
+            outp.Write("].map(function(s){return {id:s}});");
+
+
+            outp.WriteLine();
+            outp.WriteLine("var edges = [");
+            foreach (var cell in table.Cells())
+            {
+                foreach (var parent in cell.CommitPoint.Parents)
+                {
+                    outp.WriteLine("{ u: \"" + cell.CommitPoint.Id + "\", v: \"" + parent + "\"},");
+                }
+            }
+            outp.WriteLine("];");
+
+            outp.WriteLine("</script>");
         }
 
         static void RenderCommitGraphToHtml(TextWriter f, ICommitGraph table, int rowLimit)

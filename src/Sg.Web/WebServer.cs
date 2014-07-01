@@ -8,9 +8,9 @@
     public class WebServer : IDisposable
     {
         private readonly HttpListener _listener = new HttpListener();
-        private readonly Func<HttpListenerRequest, string> _responderMethod;
+        private readonly Func<HttpListenerRequest, HttpListenerResponse, string> _responderMethod;
 
-        public WebServer(Func<HttpListenerRequest, string> method, params string[] prefixes)
+        public WebServer(Func<HttpListenerRequest, HttpListenerResponse, string> method, params string[] prefixes)
         {
             if (!HttpListener.IsSupported) throw new NotSupportedException("Needs Windows XP SP2, Server 2003 or later.");
             if (prefixes == null || prefixes.Length == 0) throw new ArgumentException("Listening prefixes must be provided (for example, http://localhost:8080/index/ )", "prefixes");
@@ -48,7 +48,7 @@
         {
             try
             {
-                var rstr = _responderMethod(ctx.Request);
+                var rstr = _responderMethod(ctx.Request, ctx.Response);
                 var buf = Encoding.UTF8.GetBytes(rstr);
                 ctx.Response.ContentLength64 = buf.Length;
                 ctx.Response.OutputStream.Write(buf, 0, buf.Length);
