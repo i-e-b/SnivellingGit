@@ -140,6 +140,7 @@
                 }
             }
 
+            // This only goes from the HEAD. Need a way to get unique traces down a branch.
             foreach (var commit in SafeEnumerate(repo.Commits))
             {
                 table.AddCommit(CommitPoint.FromGitCommit(commit));
