@@ -70,7 +70,12 @@
             f.WriteLine(@"<script>
 function draw() {
     var renderer = new dagreD3.Renderer();
+    renderer.zoom(false);
     var layout = renderer.run(dagreD3.json.decode(commits, edges), d3.select('svg g'));
+
+  d3.select('svg')
+    .attr('width', layout.graph().width + 40)
+    .attr('height', layout.graph().height + 40);
 }
 </script>");
             f.WriteLine("</body></html>");
