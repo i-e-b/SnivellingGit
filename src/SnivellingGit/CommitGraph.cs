@@ -16,7 +16,24 @@
         readonly Dictionary<string, int> _idColumns = new Dictionary<string, int>();
         readonly Dictionary<string, List<string>> _refs = new Dictionary<string, List<string>>();
 
-        int columns = 1;
+        int branchColumns; // unmerged branches get their own columns on the left. We keep track of the right edge here.
+
+        // List of non-branch columns that are occupied.
+        // Each run of commits should get it's own column on the right if we are showing virtual branches
+        readonly List<int> _occupiedColumns = new List<int>();
+
+        /// <summary>
+        /// Default false.
+        /// If false, commits are always shown in one column per branch.
+        /// If true, merges inside a single branch are split into two columns.
+        /// </summary>
+        public bool ShowVirtualBranches { get; set; }
+
+        /// <summary>
+        /// Default true. If false, merges inside a single branch are displayed.
+        /// If true, merges inside a single branch are hidden.
+        /// </summary>
+        public bool SquashFlatMerges { get; set; }
 
         /// <summary>
         /// Create a new empty column-per-branch commit graph
@@ -34,11 +51,19 @@
         {
             SafeAdd(_refs, tip, name);
 
-            if (_idColumns.ContainsKey(tip)) // a shared tip.
+            if (!_idColumns.ContainsKey(tip)) // a shared tip.
             {
-                return;
+                _idColumns.Add(tip, branchColumns++);
             }
-            _idColumns.Add(tip, columns++);
+        }
+
+        /// <summary>
+        /// Add a remote reference. These are branches that shouldn't get their own column.
+        /// All references should be added before adding commits.
+        /// </summary>
+        public void AddReference(string name, string commitId)
+        {
+            SafeAdd(_refs, commitId, name);
         }
 
         /// <summary>
@@ -53,7 +78,11 @@
 
             var myCol = _idColumns[c.Id];
 
-            foreach (var parent in c.Parents.Where(parent => !_idColumns.ContainsKey(parent)))
+            if (c.Parents.Length == 1 && _idColumns.ContainsKey(c.Parents[0]))
+            {
+                TryRetireColumn(child: myCol, parent: _idColumns[c.Parents[0]]);
+            }
+            else foreach (var parent in c.Parents.Where(parent => !_idColumns.ContainsKey(parent)))
             {
                 _idColumns.Add(parent, myCol); // inherit column from child (graph dangles from branch tips)
             }
@@ -68,7 +97,8 @@
             {
                 // More refined would be to find the next common ancestor and set it's column to ours, split both the children.
                 // For now, we just push one out and hope for the best.
-                _idColumns[c.Parents[1]] += 1;
+
+                _idColumns[c.Parents[1]] = NewColumn();
             }
 
             var branchNames = LookupOrEmpty(_refs, c.Id);
@@ -88,6 +118,25 @@
             }
         }
 
+        void TryRetireColumn(int child, int parent)
+        {
+            if (child == parent) return;
+            if (!_occupiedColumns.Contains(child)) return;
+
+            _occupiedColumns.Remove(child);
+        }
+
+        int NewColumn()
+        {
+            for (int i = 0; i < 100; i++)
+            {
+                if (_occupiedColumns.Contains(i)) continue;
+                _occupiedColumns.Add(i);
+                return i;
+            }
+            return 0;
+        }
+
         static void SafeAdd(IDictionary<string, List<string>> refs, string tip, string name)
         {
             if (!refs.ContainsKey(tip))
@@ -103,19 +152,6 @@
             if (!refs.ContainsKey(key)) return new string[0];
             return refs[key];
         }
-
-        /// <summary>
-        /// Default false.
-        /// If false, commits are always shown in one column per branch.
-        /// If true, merges inside a single branch are split into two columns.
-        /// </summary>
-        public bool ShowVirtualBranches { get; set; }
-
-        /// <summary>
-        /// Default true. If false, merges inside a single branch are displayed.
-        /// If true, merges inside a single branch are hidden.
-        /// </summary>
-        public bool SquashFlatMerges { get; set; }
 
         /// <summary>
         /// Get all commit cells

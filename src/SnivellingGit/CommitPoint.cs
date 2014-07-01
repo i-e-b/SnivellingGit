@@ -15,7 +15,7 @@
         {
             return new CommitPoint(
                 commit.Sha,
-                commit.Message,
+                commit.MessageShort,
                 commit.Parents.Select(p => p.Sha).ToArray())
                 {
                     Author = commit.Author.Name,

@@ -28,21 +28,14 @@
         }
 
         [Test]
-        public void column_1_contains_D_and_E()
+        [TestCase(0, new[] { "D", "E" })]
+        [TestCase(1, new[] { "A", "B", "C", "F" })]
+        [TestCase(2, new[] { "G" })]
+        public void column_contents(int col, string[] order)
         {
-            Assert.That(_subject.Cells().Where(c => c.Column == 1).Select(c => c.CommitPoint.Id).SequenceEqual(new[] { "D", "E" }));
-        }
+            Console.WriteLine(string.Join(" -> ", _subject.Cells().Where(c => c.Column == col).Select(c => c.CommitPoint.Id)));
 
-        [Test]
-        public void column_2_contains_A_B_C_F()
-        {
-            Assert.That(_subject.Cells().Where(c => c.Column == 2).Select(c => c.CommitPoint.Id).SequenceEqual(new[] { "A", "B", "C", "F" }));
-        }
-
-        [Test]
-        public void column_3_contains_G()
-        {
-            Assert.That(_subject.Cells().Where(c => c.Column == 3).Select(c => c.CommitPoint.Id).SequenceEqual(new[] { "G" }));
+            Assert.That(_subject.Cells().Where(c => c.Column == col).Select(c => c.CommitPoint.Id).SequenceEqual(order));
         }
 
         [Test]

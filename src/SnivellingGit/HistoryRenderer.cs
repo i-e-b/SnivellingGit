@@ -1,6 +1,7 @@
 ﻿namespace SnivellingGit
 {
     using System;
+    using System.Collections.Generic;
     using System.IO;
     using System.IO.Abstractions;
     using System.Linq;
@@ -29,8 +30,8 @@
         {
             ICommitGraph table = new ColumnsCommitGraph
             {
-                ShowVirtualBranches = false,     // show merges inside the same branch as if they were in different branches (each side gets it's own column)
-                SquashFlatMerges = true         // hide merges inside the same branch
+                ShowVirtualBranches = true,     // show merges inside the same branch as if they were in different branches (each side gets it's own column)
+                SquashFlatMerges = false        // hide merges inside the same branch
             };
 
             using (var repo = new Repository(path))
@@ -50,7 +51,7 @@
 
                 outp.WriteLine("<p>Staged files: " + stg + "</p>");
                 outp.WriteLine("<p>Undergoing operation " + repo.Info.CurrentOperation + "</p>");
-                outp.WriteLine("<p>" + repo.Commits.Count() + " commits</p>");
+                outp.WriteLine("<p>" + SafeEnumerate(repo.Commits).Count() + " commits</p>");
                 outp.WriteLine("<p>  currently on " + repo.Head.CanonicalName + "</p>");
                 outp.WriteLine("<p>&middot;branches " + string.Join(", ", repo.Branches.Select(b => b.CanonicalName)) + ";</p>");
                 outp.WriteLine("<p>&middot;tags: " + string.Join(", ", repo.Tags.Select(t => t.Name)) + ";</p>");
@@ -73,13 +74,13 @@
             f.WriteLine(".flat {margin-left:10px;width:4px;height:4px;background:#aaa;}");
             f.WriteLine(".fullMerge {margin-left:8px;width:10px;height:10px;background:#ccc;border-radius:5px;-moz-border-radius:5px;-webkit-border-radius:5px;}");
             f.WriteLine(".commit {width:24px;height:16px;border-radius:5px;-moz-border-radius:5px;-webkit-border-radius:5px;}");
-            f.WriteLine(".line {border-left: 2px solid #eee;height: 16px;margin-left: 11px;margin-right: 11px;}"); // vertical line to join commits
+            f.WriteLine(".line {border-left: 2px solid #aaa;height: 16px;margin-left: 11px;margin-right: 11px;}"); // vertical line to join commits
             f.WriteLine("</style></head><body>");
         }
 
         static void RenderCommitGraphToHtml(TextWriter f, ICommitGraph table, int rowLimit)
         {
-            var maxWidth = table.Cells().Select(c => c.Column).Max() + 1;
+            var maxWidth = table.Cells().Select(c => c.Column).Max() + 2;
             f.WriteLine("<table>");
             foreach (var cell in table.Cells())
             {
@@ -90,7 +91,7 @@
 
                 if (cell.IsMerge)
                 {
-                    f.Write("<td colspan='" + cell.Column + "'/>");
+                    f.Write("<td colspan='" + (cell.Column + 1) + "'/>");
                     if (cell.FlatMerge)
                     {
                         f.Write("<td><div class='flat'></div></td>");
@@ -104,7 +105,7 @@
                     f.Write("<td rowspan='2'>" + Cleanup(cell.CommitPoint.Message) + "</td>");
                     // to do: merge lines
 
-                    f.WriteLine("</tr><td></td>");
+                    f.WriteLine("</tr><td></td><td></td>");
                     for (var i = 0; i < maxWidth; i++)
                     {
                         if (cell.ParentCols.Contains(i)) f.Write("<td><div class='line'></div></td>");
@@ -115,7 +116,7 @@
                 }
                 else
                 {
-                    f.Write("<td colspan='" + cell.Column + "'/>");
+                    f.Write("<td colspan='" + (cell.Column + 1) + "'/>");
                     f.Write("<td><div class='commit' style='background:#" + cell.CommitPoint.Colour + "' title='" + cell.CommitPoint.Author + "'></div></td>"); // to do: colourise
                     f.Write("<td colspan='" + (maxWidth - cell.Column) + "'/>");
                     f.Write("<td>" + Cleanup(cell.CommitPoint.Message) + "</td>");
@@ -128,16 +129,54 @@
 
         static void BuildCommitGraph(IRepository repo, ICommitGraph table)
         {
-            foreach (var branch in repo.Branches /*.Where(b=>!b.IsRemote)*/)
+            foreach (var branch in repo.Branches.Where(b => !b.IsRemote))
+            {
+                var tide = GetTide(branch);
+                table.AddBranch(branch.Name, branch.Tip.Sha, tide);
+
+                if (branch.IsTracking)
+                {
+                    table.AddReference(branch.Remote.Name, branch.TrackedBranch.Tip.Sha);
+                }
+            }
+
+            foreach (var commit in SafeEnumerate(repo.Commits))
+            {
+                table.AddCommit(CommitPoint.FromGitCommit(commit));
+            }
+        }
+
+        /// <summary>
+        /// Yield results until any kind of failure, then stop.
+        /// </summary>
+        static IEnumerable<T> SafeEnumerate<T>(IEnumerable<T> commits)
+        {
+            var e = commits.GetEnumerator();
+            for(;;)
+            {
+                try
+                {
+                    if (!e.MoveNext()) yield break;
+                }
+                catch
+                {
+                    yield break;
+                }
+                yield return e.Current;
+            }
+        }
+
+        static string GetTide(Branch branch)
+        {
+            try
             {
                 var common = branch.TrackingDetails.CommonAncestor;
                 var tide = (common == null) ? ("") : (common.Sha);
-                table.AddBranch(branch.CanonicalName, branch.Tip.Sha, tide);
+                return tide;
             }
-
-            foreach (var commit in repo.Commits)
+            catch
             {
-                table.AddCommit(CommitPoint.FromGitCommit(commit));
+                return "";
             }
         }
 

@@ -16,6 +16,14 @@
         void AddBranch(string name, string tip, string remoteTide);
 
         /// <summary>
+        /// Add a remote reference. These are branches that shouldn't get their own column.
+        /// All references should be added before adding commits.
+        /// </summary>
+        /// <param name="name">reference name</param>
+        /// <param name="commitId">sha id of the referenced commit</param>
+        void AddReference(string name, string commitId);
+
+        /// <summary>
         /// Add a commit. Must be added in child->parent->g.parent order.
         /// </summary>
         void AddCommit(CommitPoint commit);
