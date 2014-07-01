@@ -17,14 +17,14 @@
 
         static void Run()
         {
-            ObjectFactory.GetInstance<IEntryPoint>().Render(@"C:\Gits\repo-sample");
+            ObjectFactory.GetInstance<IHistoryRenderer>().Render(@"C:\Gits\repo-sample");
         }
 
         static void Configure()
         {
             ObjectFactory.Configure(map =>
             {
-                map.For<IEntryPoint>().Use<EntryPoint>();
+                map.For<IHistoryRenderer>().Use<HistoryRenderer>();
                 map.For<IFileSystem>().Use<FileSystem>();
             });
         }

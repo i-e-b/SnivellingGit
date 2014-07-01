@@ -3,7 +3,7 @@
     /// <summary>
     /// Entry point to the sg command line
     /// </summary>
-    public interface IEntryPoint
+    public interface IHistoryRenderer
     {
         /// <summary>
         /// Render a repository view from the given directory (should be a git root path or .git directory)

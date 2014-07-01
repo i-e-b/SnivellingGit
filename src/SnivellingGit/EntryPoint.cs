@@ -4,13 +4,12 @@
     using System.IO;
     using System.IO.Abstractions;
     using System.Linq;
-    using System.Text;
     using LibGit2Sharp;
 
     /// <summary>
     /// Entry point to the sg command line
     /// </summary>
-    public class EntryPoint : IEntryPoint
+    public class HistoryRenderer : IHistoryRenderer
     {
         readonly IFileSystem fs;
 
@@ -18,7 +17,7 @@
         /// Create entry point
         /// </summary>
         /// <param name="fs"></param>
-        public EntryPoint(IFileSystem fs)
+        public HistoryRenderer(IFileSystem fs)
         {
             this.fs = fs;
         }
@@ -38,19 +37,28 @@
             {
                 BuildCommitGraph(repo, table);
 
-                var f = new StringWriter();
-                WriteHtmlHeader(f);
 
-                f.WriteLine("<p>Undergoing operation " + repo.Info.CurrentOperation + "</p>");
-                f.WriteLine("<p>" + repo.Commits.Count() + " commits</p>");
-                f.WriteLine("<p>  currently on " + repo.Head.CanonicalName + "</p>");
-                f.WriteLine("<p>&middot;branches " + string.Join(", ", repo.Branches.Select(b => b.CanonicalName)) + ";</p>");
-                f.WriteLine("<p>&middot;tags: " + string.Join(", ", repo.Tags.Select(t => t.Name)) + ";</p>");
+                var outp = new StringWriter();
+                WriteHtmlHeader(outp);
 
-                RenderCommitGraphToHtml(f, table, rowLimit: -1);
-                WriteHtmlFooter(f);
+                var status = repo.Index.RetrieveStatus();
+                var wc = repo.Diff.Compare<TreeChanges>();
 
-                return f.ToString();
+                var stg = string.Join(", ", status.Staged.Select(s=>s.FilePath));
+
+                outp.WriteLine("<p>Working copy: " + wc.Added.Count() + " added, " + wc.Deleted.Count() + " deleted, " + wc.Modified.Count() + " modified.</p>");
+
+                outp.WriteLine("<p>Staged files: " + stg + "</p>");
+                outp.WriteLine("<p>Undergoing operation " + repo.Info.CurrentOperation + "</p>");
+                outp.WriteLine("<p>" + repo.Commits.Count() + " commits</p>");
+                outp.WriteLine("<p>  currently on " + repo.Head.CanonicalName + "</p>");
+                outp.WriteLine("<p>&middot;branches " + string.Join(", ", repo.Branches.Select(b => b.CanonicalName)) + ";</p>");
+                outp.WriteLine("<p>&middot;tags: " + string.Join(", ", repo.Tags.Select(t => t.Name)) + ";</p>");
+
+                RenderCommitGraphToHtml(outp, table, rowLimit: -1);
+                WriteHtmlFooter(outp);
+
+                return outp.ToString();
             }
         }
 
@@ -97,7 +105,7 @@
                     // to do: merge lines
 
                     f.WriteLine("</tr><td></td>");
-                    for (int i = 0; i < maxWidth; i++)
+                    for (var i = 0; i < maxWidth; i++)
                     {
                         if (cell.ParentCols.Contains(i)) f.Write("<td><div class='line'></div></td>");
                         else f.Write("<td></td>");

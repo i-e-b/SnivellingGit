@@ -23,14 +23,14 @@
 
         public static string SendResponse(HttpListenerRequest request)
         {
-            return ObjectFactory.GetInstance<IEntryPoint>().Render(@"C:\" + request.Url.AbsolutePath);
+            return ObjectFactory.GetInstance<IHistoryRenderer>().Render(@"C:\" + request.Url.AbsolutePath);
         }
 
         static void Configure()
         {
             ObjectFactory.Configure(map =>
             {
-                map.For<IEntryPoint>().Use<EntryPoint>();
+                map.For<IHistoryRenderer>().Use<HistoryRenderer>();
                 map.For<IFileSystem>().Use<FileSystem>();
             });
         }
