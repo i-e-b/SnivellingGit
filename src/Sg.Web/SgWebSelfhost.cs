@@ -5,7 +5,7 @@
     using SnivellingGit;
     using StructureMap;
 
-    class Program
+    class SgWebSelfhost
     {
         static void Main(string[] args)
         {
@@ -20,8 +20,10 @@
             }
         }
 
-        public static string SendResponse(HttpListenerRequest request)
+        public static string SendResponse(HttpListenerRequest request, HttpListenerResponse rawResponse)
         {
+            rawResponse.AddHeader("Content-Type", "text/html");
+
             var repo = ObjectFactory.GetInstance<IRepoLoader>().Load(request.Url.AbsolutePath);
             return ObjectFactory.GetInstance<IHistoryRenderer>().Render(repo);
         }

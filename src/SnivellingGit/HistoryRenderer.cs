@@ -3,7 +3,6 @@
     using System;
     using System.Collections.Generic;
     using System.IO;
-    using System.IO.Abstractions;
     using System.Linq;
     using LibGit2Sharp;
 
@@ -12,17 +11,6 @@
     /// </summary>
     public class HistoryRenderer : IHistoryRenderer
     {
-        readonly IFileSystem fs;
-
-        /// <summary>
-        /// Create entry point
-        /// </summary>
-        /// <param name="fs"></param>
-        public HistoryRenderer(IFileSystem fs)
-        {
-            this.fs = fs;
-        }
-
         /// <summary>
         /// Start a host from the current directory
         /// </summary>
