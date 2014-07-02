@@ -8,25 +8,22 @@
     public interface ICommitGraph
     {
         /// <summary>
-        /// Add a branch (all branches must be added before adding commits)
+        /// Add a commit. Must be added in child->parent->g.parent order.
+        /// You should always trace from HEAD first, then other unmerged branches in reverse
+        /// chronological order (youngest first).
         /// </summary>
-        /// <param name="name">reference name of the branch</param>
-        /// <param name="tip">sha id of the tip of this branch</param>
-        /// <param name="remoteTide">most recent shared commit between local and remote. Changes to this commit or older require a force push.</param>
-        void AddBranch(string name, string tip, string remoteTide);
+        /// <param name="commit">Commit point to add, from repository</param>
+        /// <param name="sourceRefName">The name of the reference we are tracing from</param>
+        /// <param name="remoteTide">The most recent commit on the remote for this ref. Used for display.</param>
+        void AddCommit(CommitPoint commit, string sourceRefName, string remoteTide);
 
         /// <summary>
-        /// Add a remote reference. These are branches that shouldn't get their own column.
-        /// All references should be added before adding commits.
+        /// Add a remote reference. These are branches or tags that shouldn't get their own column (such as remotes).
         /// </summary>
         /// <param name="name">reference name</param>
         /// <param name="commitId">sha id of the referenced commit</param>
         void AddReference(string name, string commitId);
 
-        /// <summary>
-        /// Add a commit. Must be added in child->parent->g.parent order.
-        /// </summary>
-        void AddCommit(CommitPoint commit);
 
         /// <summary>
         /// Get all commit cells
