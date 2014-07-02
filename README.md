@@ -5,13 +5,13 @@ SnivellingGit
 
 ### Todo
 
-* Re-layout the code to compose an `IRepository`
-* Web server and/or GUI project
 * Move head (checkout)
 * Add files ; commit ; push
 * fetch ; merge (probably best as separate?)
+* stashes -- both loose on a shelf, and as 'fake commits' to allow moving head without losing work (stage and index as needed, with coded stash names?)
+* show / hide unmerged remote branches (plus fetch all)
 * Change visualisation settings
-* better virtual branches (non-overlapping to share column)
+* flattened history by default (only unmerged branches spread out); Ancestry trace for indiviual commits (like gitk does); Per contributor display (column per person).
 
 ### References
 
