@@ -13,6 +13,12 @@
     public class HistoryRenderer : IHistoryRenderer
     {
         /// <summary>
+        /// Default false. If true, try to show a branch named 'Master' before all others, including 'HEAD'.
+        /// To do: generalise this to any named branch
+        /// </summary>
+        public bool AlwaysShowMasterFirst { get; set; }
+
+        /// <summary>
         /// Start a host from the current directory
         /// </summary>
         public string Render(IRepository repo)
@@ -63,6 +69,7 @@
 svg{border:none;overflow:visible}
 text { font-weight: 300; font-family: Helvetica, Arial, sans-serf; font-size: 14px; }
 .node rect { stroke-width: 2px; stroke: #333; fill: #fff; opacity: 1;}
+.merge circle { stroke-width: 2px; stroke: #bbb; fill: #fff; opacity: 1;}
 
 </style></head><body>");
         }
@@ -79,20 +86,30 @@ text { font-weight: 300; font-family: Helvetica, Arial, sans-serf; font-size: 14
 
                 if (cell.IsMerge)
                 {
-                    // draw circle
+                    const string mergeNode =
+@"<g class='merge' transform='translate({0},{1})'>
+    <circle cx='0' cy='0' r='7'><title>{2}</title></circle>
+    <text x='15' y='5'>{4}</text>
+</g>";
+
+                    sb.AppendFormat(mergeNode,
+                        cell.Column * 24, y, cell.CommitPoint.Author, cell.CommitPoint.Colour, cell.CommitPoint.Message);
                 }
                 else
                 {
                     const string trackedNode =
-@"<g class='node enter' transform='translate({0},{1})'>
+@"<g class='node' transform='translate({0},{1})'>
     <rect rx='5' ry='5' x='-10' y='-10' width='20' height='20' style='fill:#{3}'><title>{2}</title></rect>
+    <text x='15' y='5'>{4}</text>
 </g>";
                     const string localNode =
-@"<g class='node enter' transform='translate({0},{1})'>
+@"<g class='node' transform='translate({0},{1})'>
     <rect rx='5' ry='5' x='-10' y='-10' width='20' height='20' style='stroke:#{3}'><title>{2}</title></rect>
+    <text x='15' y='5'>{4}</text>
 </g>";
 
-                    sb.AppendFormat(cell.LocalOnly ? localNode : trackedNode, cell.Column * 24, y, cell.CommitPoint.Author, cell.CommitPoint.Colour);
+                    sb.AppendFormat(cell.LocalOnly ? localNode : trackedNode,
+                        cell.Column * 24, y, cell.CommitPoint.Author, cell.CommitPoint.Colour, cell.CommitPoint.Message);
                 }
 
                 y += 24;
@@ -109,16 +126,28 @@ text { font-weight: 300; font-family: Helvetica, Arial, sans-serf; font-size: 14
             f.Write("</g></svg>");
         }
 
-        static void BuildCommitGraph(IRepository repo, ICommitGraph table)
+        void BuildCommitGraph(IRepository repo, ICommitGraph table)
         {
+            var master = repo.Branches["master"];
+            if (AlwaysShowMasterFirst && master != null)
+            {
+                var masterTide = GetTide(master);
+                foreach (var commit in master.Commits)
+                {
+                    table.AddCommit(CommitPoint.FromGitCommit(commit), "master", masterTide);
+                }
+            }
+
+            var headTide = GetTide(repo.Head);
             foreach (var commit in repo.Head.Commits)
             {
-                table.AddCommit(CommitPoint.FromGitCommit(commit), "Head", "");
+                table.AddCommit(CommitPoint.FromGitCommit(commit), "Head", headTide);
             }
 
             foreach (var branch in repo.Branches.OrderByDescending(b => b.Tip.Author.When))
             {
                 if (branch.IsCurrentRepositoryHead) continue;
+                if (branch.Name == "master" && AlwaysShowMasterFirst) continue;
 
                 var tide = GetTide(branch);
                 foreach (var commit in branch.Commits)
