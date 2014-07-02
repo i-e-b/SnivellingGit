@@ -26,7 +26,7 @@
         /// <summary>
         /// Start a host from the current directory
         /// </summary>
-        public string Render(string path)
+        public string Render(IRepository repo)
         {
             ICommitGraph table = new ColumnsCommitGraph
             {
@@ -34,33 +34,30 @@
                 SquashFlatMerges = false        // hide merges inside the same branch
             };
 
-            using (var repo = new Repository(path))
-            {
-                BuildCommitGraph(repo, table);
+            BuildCommitGraph(repo, table);
 
 
-                var outp = new StringWriter();
-                WriteHtmlHeader(outp);
+            var outp = new StringWriter();
+            WriteHtmlHeader(outp);
 
-                var status = repo.Index.RetrieveStatus();
-                var wc = repo.Diff.Compare<TreeChanges>();
+            var status = repo.Index.RetrieveStatus();
+            var wc = repo.Diff.Compare<TreeChanges>();
 
-                var stg = string.Join(", ", status.Staged.Select(s=>s.FilePath));
+            var stg = string.Join(", ", status.Staged.Select(s => s.FilePath));
 
-                outp.WriteLine("<p>Working copy: " + wc.Added.Count() + " added, " + wc.Deleted.Count() + " deleted, " + wc.Modified.Count() + " modified.</p>");
+            outp.WriteLine("<p>Working copy: " + wc.Added.Count() + " added, " + wc.Deleted.Count() + " deleted, " + wc.Modified.Count() + " modified.</p>");
 
-                outp.WriteLine("<p>Staged files: " + stg + "</p>");
-                outp.WriteLine("<p>Undergoing operation " + repo.Info.CurrentOperation + "</p>");
-                outp.WriteLine("<p>" + SafeEnumerate(repo.Commits).Count() + " commits</p>");
-                outp.WriteLine("<p>  currently on " + repo.Head.CanonicalName + "</p>");
-                outp.WriteLine("<p>&middot;branches " + string.Join(", ", repo.Branches.Select(b => b.CanonicalName)) + ";</p>");
-                outp.WriteLine("<p>&middot;tags: " + string.Join(", ", repo.Tags.Select(t => t.Name)) + ";</p>");
+            outp.WriteLine("<p>Staged files: " + stg + "</p>");
+            outp.WriteLine("<p>Undergoing operation " + repo.Info.CurrentOperation + "</p>");
+            outp.WriteLine("<p>" + SafeEnumerate(repo.Commits).Count() + " commits</p>");
+            outp.WriteLine("<p>  currently on " + repo.Head.CanonicalName + "</p>");
+            outp.WriteLine("<p>&middot;branches " + string.Join(", ", repo.Branches.Select(b => b.CanonicalName)) + ";</p>");
+            outp.WriteLine("<p>&middot;tags: " + string.Join(", ", repo.Tags.Select(t => t.Name)) + ";</p>");
 
-                RenderCommitGraphToHtml(outp, table, rowLimit: -1);
-                WriteHtmlFooter(outp);
+            RenderCommitGraphToHtml(outp, table, rowLimit: -1);
+            WriteHtmlFooter(outp);
 
-                return outp.ToString();
-            }
+            return outp.ToString();
         }
 
         static void WriteHtmlFooter(TextWriter f)
@@ -153,7 +150,7 @@
         static IEnumerable<T> SafeEnumerate<T>(IEnumerable<T> commits)
         {
             var e = commits.GetEnumerator();
-            for(;;)
+            for (; ; )
             {
                 try
                 {

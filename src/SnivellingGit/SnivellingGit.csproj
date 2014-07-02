@@ -84,8 +84,10 @@
     <Compile Include="GraphCell.cs" />
     <Compile Include="ICommitGraph.cs" />
     <Compile Include="IHistoryRenderer.cs" />
-    <Compile Include="Program.cs" />
+    <Compile Include="IRepoLoader.cs" />
+    <Compile Include="SnivellingGit.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="RepoLoader.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />

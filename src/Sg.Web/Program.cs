@@ -1,7 +1,6 @@
 ﻿namespace Sg.Web
 {
     using System;
-    using System.IO.Abstractions;
     using System.Net;
     using SnivellingGit;
     using StructureMap;
@@ -11,7 +10,7 @@
         static void Main(string[] args)
         {
             const string listen = "http://localhost:8080/";
-            Configure();
+            SnivellingGit.Configure();
 
             using (new WebServer(SendResponse, listen))
             {
@@ -23,16 +22,8 @@
 
         public static string SendResponse(HttpListenerRequest request)
         {
-            return ObjectFactory.GetInstance<IHistoryRenderer>().Render(@"C:\" + request.Url.AbsolutePath);
-        }
-
-        static void Configure()
-        {
-            ObjectFactory.Configure(map =>
-            {
-                map.For<IHistoryRenderer>().Use<HistoryRenderer>();
-                map.For<IFileSystem>().Use<FileSystem>();
-            });
+            var repo = ObjectFactory.GetInstance<IRepoLoader>().Load(request.Url.AbsolutePath);
+            return ObjectFactory.GetInstance<IHistoryRenderer>().Render(repo);
         }
     }
 }

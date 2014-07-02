@@ -1,5 +1,7 @@
 ﻿namespace SnivellingGit
 {
+    using LibGit2Sharp;
+
     /// <summary>
     /// Entry point to the sg command line
     /// </summary>
@@ -8,6 +10,6 @@
         /// <summary>
         /// Render a repository view from the given directory (should be a git root path or .git directory)
         /// </summary>
-        string Render(string path);
+        string Render(IRepository repo);
     }
 }
