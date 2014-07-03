@@ -65,8 +65,9 @@
 .commit {width:24px;height:16px;border-radius:5px;-moz-border-radius:5px;-webkit-border-radius:5px;}
 .line {border-left: 2px solid #aaa;height: 16px;margin-left: 11px;margin-right: 11px;}
 
-.tag path { stroke: #333; stroke-width: 1px; fill: none; }
-path { stroke: #333; stroke-width: 1px; fill: none; }
+.tag path { stroke: #333; stroke-width: 1px; fill: none; opacity: 0.5; }
+.cmplx path { stroke: #aaa; stroke-width: 2px; fill: none;  opacity: 0.2;}
+path { stroke: #aaa; stroke-width: 1px; fill: none; }
 svg{border:none;overflow:visible}
 text { font-weight: 300; font-family: Helvetica, Arial, sans-serf; font-size: 10px; }
 .node rect { stroke-width: 2px; stroke: #333; fill: #fff; opacity: 1;}
@@ -103,7 +104,8 @@ text { font-weight: 300; font-family: Helvetica, Arial, sans-serf; font-size: 10
     <text x='-40' y='3' text-anchor='end'>{2}</text>
     <path marker-end='url(#dot)' d='M-35,0L{3},0' style='opacity: 1;'></path>
 </g>";
-        const string straightLine = @"<g><path d='M{0},{1}L{2},{3}' style='opacity: 1;'></path></g>";
+        const string simpleLine = @"<g><path d='M{0},{1}L{2},{3}' style='opacity: 1;'></path></g>";
+        const string complexLine = @"<g class='cmplx'><path d='M{0},{1}L{2},{3}' style='opacity: 1;'></path></g>";
         const string commitMessage =
 @"<g class='tag' transform='translate({0},{1})'>
     <text x='20' y='3' text-anchor='start'>{2}</text>
@@ -111,6 +113,7 @@ text { font-weight: 300; font-family: Helvetica, Arial, sans-serf; font-size: 10
 
         static void RenderCommitGraphToHtml(TextWriter f, ICommitGraph table, int rowLimit)
         {
+            int originalRowLimit = rowLimit;
             const int cellMargin = 4;
             const int cellw = 20;
             const int cellh = 16;
@@ -128,30 +131,38 @@ text { font-weight: 300; font-family: Helvetica, Arial, sans-serf; font-size: 10
             var rightMostNodeEdge = rightMostColumnX + 10;
             var rightMostEdgeOfSvg = rightMostNodeEdge;
             var sb = new StringBuilder();
-            
+
+            // Draw branch lines (overdrawn by nodes)
+            var odd = true;
             foreach (var cell in cells)
             {
                 if (rowLimit-- == 0) break;
 
-
-                // Draw branch lines (overdrawn by nodes)
-                foreach (var parent in cell.ParentCells)
+                var complex = cell.ChildCells.Count(c => cell.Column == c.Column) > 1;
+                if (complex) { odd = !odd; }
+                int xoff = (odd) ? 13 : -13;
+                foreach (var child in cell.ChildCells)
                 {
-                    // This would be much simpler to draw parent->child, rather than the native child->parent
-                    // the logic would then be:
-                    // if child.Col != my.Col, draw branch
-                    // else if (count of children on same row == 1), draw plain line
-                    // else, draw compound lines
-                    //if (/*parent.Row == cell.Row + 1*/ cell.CommitPoint.Parents.Length == 1 || parent.Column != cell.Column) // simple case of nearest neigbour, or branching
-                   // {
-                        sb.AppendFormat(straightLine, cellX(cell.Column) + 10, cellY(cell.Row), cellX(parent.Column) + 15, cellY(parent.Row));
-                    //}
-                    //else // need to hint at more complex ancestry
-                   // {
-                    //    Console.Write(".");
-                        //...
-                   // }
+                    if (child.Column != cell.Column) // a branch
+                    {
+                        sb.AppendFormat(simpleLine, cellX(cell.Column), cellY(cell.Row), cellX(child.Column), cellY(child.Row));
+                    }
+                    else if (!complex) // simple inheritance
+                    {
+                        sb.AppendFormat(simpleLine, cellX(cell.Column), cellY(cell.Row), cellX(child.Column), cellY(child.Row));
+                    }
+                    else // complex inheritance (this needs to look better!)
+                    {
+                        sb.AppendFormat(complexLine, cellX(cell.Column) + xoff, cellY(cell.Row), cellX(child.Column) + xoff, cellY(child.Row));
+                        xoff += (odd) ? 3 : -3;
+                    }
                 }
+            }
+
+            rowLimit = originalRowLimit;
+            foreach (var cell in cells)
+            {
+                if (rowLimit-- == 0) break;
 
                 // Draw node
                 if (cell.IsMerge)

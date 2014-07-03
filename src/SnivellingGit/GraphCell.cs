@@ -33,9 +33,10 @@
         public IEnumerable<string> BranchNames { get; set; }
 
         /// <summary>
-        /// Visual cell of parent nodes
+        /// Visual cell of child nodes
         /// </summary>
-        public IEnumerable<GraphCell> ParentCells { get; set; }
+        /// <remarks>Parent->Child order makes drawing the edges a lot easier</remarks>
+        public IEnumerable<GraphCell> ChildCells { get; set; }
 
         /// <summary>
         /// True if this commit is only in the local repo. False if it is on a tracked remote.

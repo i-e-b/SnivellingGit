@@ -9,8 +9,8 @@
     public class ColumnsCommitGraph: ICommitGraph
     {
         readonly List<GraphCell> _cells = new List<GraphCell>();
-        /// <summary> node -> parents </summary>
-        readonly Dictionary<string, HashSet<string>> _edges = new Dictionary<string, HashSet<string>>();
+        /// <summary> parent -> children </summary>
+        readonly Dictionary<string, HashSet<string>> _reverseEdges = new Dictionary<string, HashSet<string>>();
 
         /// <summary> source ref -> column </summary>
         readonly Dictionary<string, int> _refColumns = new Dictionary<string, int>();
@@ -75,8 +75,8 @@
 
         void AddEdge(string childId, string parentId)
         {
-            if (!_edges.ContainsKey(childId)) _edges.Add(childId, new HashSet<string>());
-            _edges[childId].Add(parentId);
+            if (!_reverseEdges.ContainsKey(parentId)) _reverseEdges.Add(parentId, new HashSet<string>());
+            _reverseEdges[parentId].Add(childId);
         }
 
         /// <summary>
@@ -111,33 +111,26 @@
             {
                 var cell = cellSet[index];
                 cell.Row = index;
-                if (!_edges.ContainsKey(cell.CommitPoint.Id))
-                {
-                    cell.ParentCells = new GraphCell[0];
-                }
-                else
-                {
-                    cell.ParentCells = LookupAll(cellLookup, _edges[cell.CommitPoint.Id]).ToArray();
-                }
+
+                var children = FindAny(_reverseEdges, cell.CommitPoint.Id);
+                cell.ChildCells = LookupAll(cellLookup, children).Reverse();
+                // because of the way we build the edges list, it's in descending order of distance from parent to child.
+                // we reverse this so we can show a nicely nested set of lines
             }
 
             // sort by date, youngest first
-            return cellSet;//.OrderByDescending(c => c.CommitPoint.Date).ToDictionary(c=>c.CommitPoint.Id);
+            return cellSet;
+        }
+
+        static IEnumerable<TV> FindAny<TK, TV>(IReadOnlyDictionary<TK, HashSet<TV>> reverseEdges, TK id)
+        {
+            if (reverseEdges.ContainsKey(id)) return reverseEdges[id];
+            return new TV[0];
         }
 
         static IEnumerable<TV> LookupAll<TK, TV>(IDictionary<TK, TV> source, IEnumerable<TK> targets)
         {
             return from target in targets where source.ContainsKey(target) select source[target];
         }
-
-        /*
-        /// <summary>
-        /// Look up the parents of a child
-        /// </summary>
-        public IEnumerable<string> ParentsOf(string childId)
-        {
-            if (!_edges.ContainsKey(childId)) return new string[0];
-            return _edges[childId];
-        }*/
     }
 }
