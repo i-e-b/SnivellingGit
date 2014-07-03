@@ -5,6 +5,7 @@ SnivellingGit
 
 ### Todo
 
+* filter dead branches and redundant tags (like remote heads and when remotes match local)
 * Move head (checkout)
 * Add files ; commit ; push
 * fetch ; merge (probably best as separate?)
