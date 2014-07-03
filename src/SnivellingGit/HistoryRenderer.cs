@@ -4,6 +4,7 @@
     using System.Collections.Generic;
     using System.IO;
     using System.Linq;
+    using System.Text;
     using LibGit2Sharp;
 
     /// <summary>
@@ -12,15 +13,17 @@
     public class HistoryRenderer : IHistoryRenderer
     {
         /// <summary>
+        /// Default false. If true, try to show a branch named 'Master' before all others, including 'HEAD'.
+        /// To do: generalise this to any named branch
+        /// </summary>
+        public bool AlwaysShowMasterFirst { get; set; }
+
+        /// <summary>
         /// Start a host from the current directory
         /// </summary>
         public string Render(IRepository repo)
         {
-            ICommitGraph table = new ColumnsCommitGraph
-            {
-                ShowVirtualBranches = true,     // show merges inside the same branch as if they were in different branches (each side gets it's own column)
-                SquashFlatMerges = false        // hide merges inside the same branch
-            };
+            ICommitGraph table = new ColumnsCommitGraph();
 
             BuildCommitGraph(repo, table);
 
@@ -55,80 +58,107 @@
 
         static void WriteHtmlHeader(TextWriter f)
         {
-            f.WriteLine("<html><head><title>Log</title><style>");
-            f.WriteLine(".flat {margin-left:10px;width:4px;height:4px;background:#aaa;}");
-            f.WriteLine(".fullMerge {margin-left:8px;width:10px;height:10px;background:#ccc;border-radius:5px;-moz-border-radius:5px;-webkit-border-radius:5px;}");
-            f.WriteLine(".commit {width:24px;height:16px;border-radius:5px;-moz-border-radius:5px;-webkit-border-radius:5px;}");
-            f.WriteLine(".line {border-left: 2px solid #aaa;height: 16px;margin-left: 11px;margin-right: 11px;}"); // vertical line to join commits
-            f.WriteLine("</style></head><body>");
+            f.WriteLine(@"<html><head><title>Log</title><style>
+
+.flat {margin-left:10px;width:4px;height:4px;background:#aaa;}
+.fullMerge {margin-left:8px;width:10px;height:10px;background:#ccc;border-radius:5px;-moz-border-radius:5px;-webkit-border-radius:5px;}
+.commit {width:24px;height:16px;border-radius:5px;-moz-border-radius:5px;-webkit-border-radius:5px;}
+.line {border-left: 2px solid #aaa;height: 16px;margin-left: 11px;margin-right: 11px;}
+
+.edgePath path { stroke: #333; stroke-width: 1.5px; fill: none; }
+svg{border:none;overflow:visible}
+text { font-weight: 300; font-family: Helvetica, Arial, sans-serf; font-size: 14px; }
+.node rect { stroke-width: 2px; stroke: #333; fill: #fff; opacity: 1;}
+.merge circle { stroke-width: 2px; stroke: #bbb; fill: #fff; opacity: 1;}
+
+</style></head><body>");
         }
 
         static void RenderCommitGraphToHtml(TextWriter f, ICommitGraph table, int rowLimit)
         {
-            var maxWidth = table.Cells().Select(c => c.Column).Max() + 2;
-            f.WriteLine("<table>");
+            var maxWidth = (table.Cells().Select(c => c.Column).Max() + 1) * 24;
+            var sb = new StringBuilder();
+            
+            int y = 0;
             foreach (var cell in table.Cells())
             {
-                f.Write("\r\n<tr>");
                 if (rowLimit-- == 0) break;
-
-                f.Write("<td>" + string.Join(", ", cell.BranchNames) + "</td>");
 
                 if (cell.IsMerge)
                 {
-                    f.Write("<td colspan='" + (cell.Column + 1) + "'/>");
-                    if (cell.FlatMerge)
-                    {
-                        f.Write("<td><div class='flat'></div></td>");
-                    }
-                    else
-                    {
-                        f.Write("<td><div class='fullMerge'></div></td>");
-                    }
-                    f.Write("<td colspan='" + (maxWidth - cell.Column) + "'/>");
+                    const string mergeNode =
+@"<g class='merge' transform='translate({0},{1})'>
+    <circle cx='0' cy='0' r='7'><title>{2}</title></circle>
+    <text x='15' y='5'>{4}</text>
+</g>";
 
-                    f.Write("<td rowspan='2'>" + Cleanup(cell.CommitPoint.Message) + "</td>");
-                    // to do: merge lines
-
-                    f.WriteLine("</tr><td></td><td></td>");
-                    for (var i = 0; i < maxWidth; i++)
-                    {
-                        if (cell.ParentCols.Contains(i)) f.Write("<td><div class='line'></div></td>");
-                        else f.Write("<td></td>");
-                    }
-                    f.WriteLine();
-                    f.Write("<tr>");
+                    sb.AppendFormat(mergeNode,
+                        cell.Column * 24, y, cell.CommitPoint.Author, cell.CommitPoint.Colour, cell.CommitPoint.Message);
                 }
                 else
                 {
-                    f.Write("<td colspan='" + (cell.Column + 1) + "'/>");
-                    f.Write("<td><div class='commit' style='background:#" + cell.CommitPoint.Colour + "' title='" + cell.CommitPoint.Author + "'></div></td>"); // to do: colourise
-                    f.Write("<td colspan='" + (maxWidth - cell.Column) + "'/>");
-                    f.Write("<td>" + Cleanup(cell.CommitPoint.Message) + "</td>");
+                    const string trackedNode =
+@"<g class='node' transform='translate({0},{1})'>
+    <rect rx='5' ry='5' x='-10' y='-10' width='20' height='20' style='fill:#{3}'><title>{2}</title></rect>
+    <text x='15' y='5'>{4}</text>
+</g>";
+                    const string localNode =
+@"<g class='node' transform='translate({0},{1})'>
+    <rect rx='5' ry='5' x='-10' y='-10' width='20' height='20' style='stroke:#{3}'><title>{2}</title></rect>
+    <text x='15' y='5'>{4}</text>
+</g>";
+
+                    sb.AppendFormat(cell.LocalOnly ? localNode : trackedNode,
+                        cell.Column * 24, y, cell.CommitPoint.Author, cell.CommitPoint.Colour, cell.CommitPoint.Message);
                 }
 
-                f.Write("</tr>");
+                y += 24;
             }
-            f.Write("</table>");
+            f.WriteLine(@"
+<svg width='100%' height='{0}px'>
+<g transform='translate(20,20)'>
+<defs>
+    <marker id='arrowhead' viewBox='0 0 10 10' refX='8' refY='5' markerUnits='strokeWidth' markerWidth='8' markerHeight='5' orient='auto' style='fill: #333'>
+        <path d='M 0 0 L 10 5 L 0 10 z'></path>
+    </marker>
+</defs>", y + 25);
+            f.Write(sb.ToString());
+            f.Write("</g></svg>");
         }
 
-        static void BuildCommitGraph(IRepository repo, ICommitGraph table)
+        void BuildCommitGraph(IRepository repo, ICommitGraph table)
         {
-            foreach (var branch in repo.Branches.Where(b => !b.IsRemote))
+            var master = repo.Branches["master"];
+            if (AlwaysShowMasterFirst && master != null)
             {
+                var masterTide = GetTide(master);
+                foreach (var commit in master.Commits)
+                {
+                    table.AddCommit(CommitPoint.FromGitCommit(commit), "master", masterTide);
+                }
+            }
+
+            var headTide = GetTide(repo.Head);
+            foreach (var commit in repo.Head.Commits)
+            {
+                table.AddCommit(CommitPoint.FromGitCommit(commit), "Head", headTide);
+            }
+
+            foreach (var branch in repo.Branches.OrderByDescending(b => b.Tip.Author.When))
+            {
+                if (branch.IsCurrentRepositoryHead) continue;
+                if (branch.Name == "master" && AlwaysShowMasterFirst) continue;
+
                 var tide = GetTide(branch);
-                table.AddBranch(branch.Name, branch.Tip.Sha, tide);
+                foreach (var commit in branch.Commits)
+                {
+                    table.AddCommit(CommitPoint.FromGitCommit(commit), branch.Name, tide);
+                }
 
                 if (branch.IsTracking)
                 {
                     table.AddReference(branch.Remote.Name, branch.TrackedBranch.Tip.Sha);
                 }
-            }
-
-            // This only goes from the HEAD. Need a way to get unique traces down a branch.
-            foreach (var commit in SafeEnumerate(repo.Commits))
-            {
-                table.AddCommit(CommitPoint.FromGitCommit(commit));
             }
         }
 

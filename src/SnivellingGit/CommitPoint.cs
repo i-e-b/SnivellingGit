@@ -1,10 +1,12 @@
 ﻿namespace SnivellingGit
 {
+    using System;
     using System.Linq;
     using LibGit2Sharp;
 
     /// <summary>
-    /// Represents a point in the commit DAG
+    /// Represents a point in the commit DAG.
+    /// Used as the layout model for a commit point.
     /// </summary>
     public class CommitPoint
     {
@@ -16,6 +18,7 @@
             return new CommitPoint(
                 commit.Sha,
                 commit.MessageShort,
+                commit.Author.When,
                 commit.Parents.Select(p => p.Sha).ToArray())
                 {
                     Author = commit.Author.Name,
@@ -41,11 +44,12 @@
         /// <summary>
         /// Create from data
         /// </summary>
-        public CommitPoint(string id, string message, string[] parents)
+        public CommitPoint(string id, string message, DateTimeOffset when, string[] parents)
         {
             Id = id;
             Message = message;
             Parents = parents;
+            Date = when;
         }
 
         /// <summary>
@@ -62,5 +66,10 @@
         /// SHA1 identity for the commit
         /// </summary>
         public string Id { get; set; }
+
+        /// <summary>
+        /// Time of commit (in original repo, not related to push time)
+        /// </summary>
+        public DateTimeOffset Date { get; set; }
     }
 }

@@ -25,7 +25,10 @@
             rawResponse.AddHeader("Content-Type", "text/html");
 
             var repo = ObjectFactory.GetInstance<IRepoLoader>().Load(request.Url.AbsolutePath);
-            return ObjectFactory.GetInstance<IHistoryRenderer>().Render(repo);
+            var renderer = ObjectFactory.GetInstance<IHistoryRenderer>();
+            renderer.AlwaysShowMasterFirst = true;
+
+            return renderer.Render(repo);
         }
     }
 }

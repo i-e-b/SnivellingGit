@@ -23,18 +23,13 @@
         public bool IsMerge { get; set; }
 
         /// <summary>
-        /// True if a merge of two commits in the same branch
-        /// </summary>
-        public bool FlatMerge { get; set; }
-
-        /// <summary>
-        /// Columns of all parents (for showing merge origins)
-        /// </summary>
-        public IEnumerable<int> ParentCols { get; set; }
-
-        /// <summary>
         /// Names of all branches and tags pointing to this commit cell.
         /// </summary>
         public IEnumerable<string> BranchNames { get; set; }
+
+        /// <summary>
+        /// True if this commit is only in the local repo. False if it is on a tracked remote.
+        /// </summary>
+        public bool LocalOnly { get; set; }
     }
 }
