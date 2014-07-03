@@ -45,7 +45,7 @@
             outp.WriteLine("<p>&middot;branches " + string.Join(", ", repo.Branches.Select(b => b.CanonicalName)) + ";</p>");
             outp.WriteLine("<p>&middot;tags: " + string.Join(", ", repo.Tags.Select(t => t.Name)) + ";</p>");
 
-            RenderCommitGraphToHtml(outp, table, rowLimit: 100);
+            RenderCommitGraphToHtml(outp, table, rowLimit:-1);
             WriteHtmlFooter(outp);
 
             return outp.ToString();
@@ -100,8 +100,13 @@ text { font-weight: 300; font-family: Helvetica, Arial, sans-serf; font-size: 10
 </g>";
         const string branchTagAnnotation =
 @"<g class='tag' transform='translate({0},{1})'>
-    <text x='-40' y='5' text-anchor='end'>{2}</text>
+    <text x='-40' y='3' text-anchor='end'>{2}</text>
     <path marker-end='url(#dot)' d='M-35,0L{3},0' style='opacity: 1;'></path>
+</g>";
+        const string straightLine = @"<g><path d='M{0},{1}L{2},{3}' style='opacity: 1;'></path></g>";
+        const string commitMessage =
+@"<g class='tag' transform='translate({0},{1})'>
+    <text x='20' y='3' text-anchor='start'>{2}</text>
 </g>";
 
         static void RenderCommitGraphToHtml(TextWriter f, ICommitGraph table, int rowLimit)
@@ -112,7 +117,7 @@ text { font-weight: 300; font-family: Helvetica, Arial, sans-serf; font-size: 10
 
             var cells = table.Cells().ToArray();
 
-            var widestLabel = cells.Select(c => GuessStringWidth(10, c.BranchNames)).Max();
+            var widestLabel = cells.Select(c => GuessStringWidth(10, c.BranchNames.ToArray())).Max();
             int tagLabelMargin = widestLabel + 40;
 
             Func<int, int> cellX = col => (col * cellw) + tagLabelMargin;
@@ -120,7 +125,8 @@ text { font-weight: 300; font-family: Helvetica, Arial, sans-serf; font-size: 10
             Func<int, int> labelX = col => col * cellw;
 
             var rightMostColumnX = cellX(cells.Select(c => c.Column).Max() + 1);
-            var rightMostNodeEdge = tagLabelMargin + rightMostColumnX + 10;
+            var rightMostNodeEdge = rightMostColumnX + 10;
+            var rightMostEdgeOfSvg = rightMostNodeEdge;
             var sb = new StringBuilder();
             
             foreach (var cell in cells)
@@ -131,8 +137,20 @@ text { font-weight: 300; font-family: Helvetica, Arial, sans-serf; font-size: 10
                 // Draw branch lines (overdrawn by nodes)
                 foreach (var parent in cell.ParentCells)
                 {
-                    sb.AppendFormat(@"<g><path d='M{0},{1}L{2},{3}' style='opacity: 1;'></path></g>",
-                        cellX(cell.Column), cellY(cell.Row), cellX(parent.Column), cellY(parent.Row));
+                    // This would be much simpler to draw parent->child, rather than the native child->parent
+                    // the logic would then be:
+                    // if child.Col != my.Col, draw branch
+                    // else if (count of children on same row == 1), draw plain line
+                    // else, draw compound lines
+                    //if (/*parent.Row == cell.Row + 1*/ cell.CommitPoint.Parents.Length == 1 || parent.Column != cell.Column) // simple case of nearest neigbour, or branching
+                   // {
+                        sb.AppendFormat(straightLine, cellX(cell.Column) + 10, cellY(cell.Row), cellX(parent.Column) + 15, cellY(parent.Row));
+                    //}
+                    //else // need to hint at more complex ancestry
+                   // {
+                    //    Console.Write(".");
+                        //...
+                   // }
                 }
 
                 // Draw node
@@ -145,6 +163,10 @@ text { font-weight: 300; font-family: Helvetica, Arial, sans-serf; font-size: 10
                     sb.AppendFormat(cell.LocalOnly ? localNode : trackedNode, cellX(cell.Column), cellY(cell.Row), cell.CommitPoint.Author, cell.CommitPoint.Colour);
                 }
 
+                // Draw commit message
+                sb.AppendFormat(commitMessage, rightMostNodeEdge, cellY(cell.Row), cell.CommitPoint.Message);
+                rightMostEdgeOfSvg = Math.Max(rightMostEdgeOfSvg, rightMostNodeEdge + GuessStringWidth(10, cell.CommitPoint.Message));
+
                 // Draw tags and branch names
                 if (cell.BranchNames.Any())
                 {
@@ -152,7 +174,7 @@ text { font-weight: 300; font-family: Helvetica, Arial, sans-serf; font-size: 10
                 }
             }
 
-            f.WriteLine(SvgHeader, rightMostNodeEdge, cellY(cells.Length) + 25);
+            f.WriteLine(SvgHeader, rightMostEdgeOfSvg + 25, cellY(cells.Length) + 25);
             f.Write(sb.ToString());
             f.Write("</g></svg>");
         }
@@ -160,8 +182,9 @@ text { font-weight: 300; font-family: Helvetica, Arial, sans-serf; font-size: 10
         /// <summary>
         /// Guess the width for a proportional font.
         /// NOT ACCURATE.
+        /// To do- have a client side library adjust the guesses with measurements
         /// </summary>
-        static int GuessStringWidth(int fontSizePx, IEnumerable<string> parts)
+        static int GuessStringWidth(int fontSizePx, params string[] parts)
         {
             int l = 0;
             int narrow = fontSizePx / 8;
