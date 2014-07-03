@@ -102,10 +102,42 @@
         /// </summary>
         public IEnumerable<GraphCell> Cells()
         {
-            // TODO: reimplement the "SquashFlatMerges" logic here.
+            // TODO: reimplement the "SquashFlatMerges" logic here?
+
+            var cellSet = _cells.OrderByDescending(c => c.CommitPoint.Date).ToArray();
+            var cellLookup = _cells.ToDictionary(c => c.CommitPoint.Id);
+
+            for (int index = 0; index < cellSet.Length; index++)
+            {
+                var cell = cellSet[index];
+                cell.Row = index;
+                if (!_edges.ContainsKey(cell.CommitPoint.Id))
+                {
+                    cell.ParentCells = new GraphCell[0];
+                }
+                else
+                {
+                    cell.ParentCells = LookupAll(cellLookup, _edges[cell.CommitPoint.Id]).ToArray();
+                }
+            }
 
             // sort by date, youngest first
-            return _cells.OrderByDescending(c => c.CommitPoint.Date);
+            return cellSet;//.OrderByDescending(c => c.CommitPoint.Date).ToDictionary(c=>c.CommitPoint.Id);
         }
+
+        static IEnumerable<TV> LookupAll<TK, TV>(IDictionary<TK, TV> source, IEnumerable<TK> targets)
+        {
+            return from target in targets where source.ContainsKey(target) select source[target];
+        }
+
+        /*
+        /// <summary>
+        /// Look up the parents of a child
+        /// </summary>
+        public IEnumerable<string> ParentsOf(string childId)
+        {
+            if (!_edges.ContainsKey(childId)) return new string[0];
+            return _edges[childId];
+        }*/
     }
 }

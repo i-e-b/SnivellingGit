@@ -13,6 +13,15 @@ SnivellingGit
 * Change visualisation settings
 * flattened history by default (only unmerged branches spread out); Ancestry trace for indiviual commits (like gitk does); Per contributor display (column per person).
 
+### Implementation details
+
+* Make a reactive SVG generator, to do the rendering and add JS to re-align things post-measurement.
+* select nodes with shift-click
+* cherry-pick with ctrl-click
+* rebase with ctrl-shift-click
+* merge with context after selecting
+* squash with context after selecting
+
 ### References
 
 * http://tonsky.me/blog/reinventing-git-interface/

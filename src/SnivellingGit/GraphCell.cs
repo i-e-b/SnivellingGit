@@ -18,6 +18,11 @@
         public int Column { get; set; }
 
         /// <summary>
+        /// Display row. From sort order, zero based.
+        /// </summary>
+        public int Row { get; set; }
+
+        /// <summary>
         /// True if commit has more than one parent
         /// </summary>
         public bool IsMerge { get; set; }
@@ -26,6 +31,11 @@
         /// Names of all branches and tags pointing to this commit cell.
         /// </summary>
         public IEnumerable<string> BranchNames { get; set; }
+
+        /// <summary>
+        /// Visual cell of parent nodes
+        /// </summary>
+        public IEnumerable<GraphCell> ParentCells { get; set; }
 
         /// <summary>
         /// True if this commit is only in the local repo. False if it is on a tracked remote.

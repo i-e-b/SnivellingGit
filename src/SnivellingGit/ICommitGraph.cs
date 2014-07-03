@@ -26,9 +26,8 @@
 
 
         /// <summary>
-        /// Get all commit cells
+        /// Get all commit cells as a dictionary of (sha1 id -> GraphCell)
         /// </summary>
         IEnumerable<GraphCell> Cells();
-
     }
 }

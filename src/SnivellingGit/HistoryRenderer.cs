@@ -66,6 +66,7 @@
 .line {border-left: 2px solid #aaa;height: 16px;margin-left: 11px;margin-right: 11px;}
 
 .tag path { stroke: #333; stroke-width: 1px; fill: none; }
+path { stroke: #333; stroke-width: 1px; fill: none; }
 svg{border:none;overflow:visible}
 text { font-weight: 300; font-family: Helvetica, Arial, sans-serf; font-size: 10px; }
 .node rect { stroke-width: 2px; stroke: #333; fill: #fff; opacity: 1;}
@@ -74,68 +75,7 @@ text { font-weight: 300; font-family: Helvetica, Arial, sans-serf; font-size: 10
 </style></head><body>");
         }
 
-        static void RenderCommitGraphToHtml(TextWriter f, ICommitGraph table, int rowLimit)
-        {
-            const int cellMargin = 4;
-            const int cellw = 20;
-            const int cellh = 16;
-
-            var widestLabel = table.Cells().Select(c => GuessStringWidth(10, c.BranchNames)).Max();
-            int tagLabelMargin = widestLabel + 40;
-
-            Func<int, int> cellX = col => (col * cellw) + tagLabelMargin;
-            Func<int, int> labelX = col => col * cellw;
-
-            var rightMostColumnX = cellX(table.Cells().Select(c => c.Column).Max() + 1);
-            var maxWidth = tagLabelMargin + rightMostColumnX + 10;
-            var sb = new StringBuilder();
-            
-            int y = 0;
-            foreach (var cell in table.Cells())
-            {
-                if (rowLimit-- == 0) break;
-
-                if (cell.IsMerge)
-                {
-                    const string mergeNode =
-@"<g class='merge' transform='translate({0},{1})'>
-    <circle cx='0' cy='0' r='7'><title>{2}</title></circle>
-</g>";
-
-                    sb.AppendFormat(mergeNode,
-                        cellX(cell.Column), y, cell.CommitPoint.Author);
-                }
-                else
-                {
-                    const string trackedNode =
-@"<g class='node' transform='translate({0},{1})'>
-    <rect rx='5' ry='5' x='-10' y='-8' width='20' height='16' style='fill:#{3}'><title>{2}</title></rect>
-</g>";
-                    const string localNode =
-@"<g class='node' transform='translate({0},{1})'>
-    <rect rx='5' ry='5' x='-10' y='-8' width='20' height='16' style='stroke:#{3}'><title>{2}</title></rect>
-</g>";
-
-                    sb.AppendFormat(cell.LocalOnly ? localNode : trackedNode, cellX(cell.Column), y, cell.CommitPoint.Author, cell.CommitPoint.Colour);
-                    // todo: output text div aligned to the cell
-                }
-
-                if (cell.BranchNames.Any())
-                {
-                    const string branchNode =
-@"<g class='tag' transform='translate({0},{1})'>
-    <text x='-40' y='5' text-anchor='end'>{2}</text>
-    <path marker-end='url(#dot)' d='M-35,0L{3},0' style='opacity: 1;'></path>
-</g>";
-
-                    sb.AppendFormat(branchNode,
-                        tagLabelMargin, y, string.Join(", ", cell.BranchNames), labelX(cell.Column) - 5);
-                }
-
-                y += cellh + cellMargin;
-            }
-
-            f.WriteLine(@"
+        const string SvgHeader = @"
 <svg width='{0}px' height='{1}px'>
 <g transform='translate(20,20)'>
 <defs>
@@ -145,8 +85,74 @@ text { font-weight: 300; font-family: Helvetica, Arial, sans-serf; font-size: 10
     <marker id='dot' viewBox='-10 -10 20 20' refX='0' refY='0' markerUnits='strokeWidth' markerWidth='10' markerHeight='10' orient='auto' style='fill: #333'>
         <circle cx='0' cy='0' r='3'></circle>
     </marker>
-</defs>", maxWidth, y + 25);
+</defs>";
+        const string trackedNode =
+@"<g class='node' transform='translate({0},{1})'>
+    <rect rx='5' ry='5' x='-10' y='-8' width='20' height='16' style='fill:#{3}'><title>{2}</title></rect>
+</g>";
+        const string localNode =
+@"<g class='node' transform='translate({0},{1})'>
+    <rect rx='5' ry='5' x='-10' y='-8' width='20' height='16' style='stroke:#{3}'><title>{2}</title></rect>
+</g>";
+        const string mergeNode =
+@"<g class='merge' transform='translate({0},{1})'>
+    <circle cx='0' cy='0' r='7'><title>{2}</title></circle>
+</g>";
+        const string branchTagAnnotation =
+@"<g class='tag' transform='translate({0},{1})'>
+    <text x='-40' y='5' text-anchor='end'>{2}</text>
+    <path marker-end='url(#dot)' d='M-35,0L{3},0' style='opacity: 1;'></path>
+</g>";
 
+        static void RenderCommitGraphToHtml(TextWriter f, ICommitGraph table, int rowLimit)
+        {
+            const int cellMargin = 4;
+            const int cellw = 20;
+            const int cellh = 16;
+
+            var cells = table.Cells().ToArray();
+
+            var widestLabel = cells.Select(c => GuessStringWidth(10, c.BranchNames)).Max();
+            int tagLabelMargin = widestLabel + 40;
+
+            Func<int, int> cellX = col => (col * cellw) + tagLabelMargin;
+            Func<int, int> cellY = row => (row * (cellh + cellMargin));
+            Func<int, int> labelX = col => col * cellw;
+
+            var rightMostColumnX = cellX(cells.Select(c => c.Column).Max() + 1);
+            var rightMostNodeEdge = tagLabelMargin + rightMostColumnX + 10;
+            var sb = new StringBuilder();
+            
+            foreach (var cell in cells)
+            {
+                if (rowLimit-- == 0) break;
+
+
+                // Draw branch lines (overdrawn by nodes)
+                foreach (var parent in cell.ParentCells)
+                {
+                    sb.AppendFormat(@"<g><path d='M{0},{1}L{2},{3}' style='opacity: 1;'></path></g>",
+                        cellX(cell.Column), cellY(cell.Row), cellX(parent.Column), cellY(parent.Row));
+                }
+
+                // Draw node
+                if (cell.IsMerge)
+                {
+                    sb.AppendFormat(mergeNode, cellX(cell.Column), cellY(cell.Row), cell.CommitPoint.Author);
+                }
+                else
+                {
+                    sb.AppendFormat(cell.LocalOnly ? localNode : trackedNode, cellX(cell.Column), cellY(cell.Row), cell.CommitPoint.Author, cell.CommitPoint.Colour);
+                }
+
+                // Draw tags and branch names
+                if (cell.BranchNames.Any())
+                {
+                    sb.AppendFormat(branchTagAnnotation, tagLabelMargin, cellY(cell.Row), string.Join(", ", cell.BranchNames), labelX(cell.Column) - 5);
+                }
+            }
+
+            f.WriteLine(SvgHeader, rightMostNodeEdge, cellY(cells.Length) + 25);
             f.Write(sb.ToString());
             f.Write("</g></svg>");
         }
@@ -270,6 +276,7 @@ text { font-weight: 300; font-family: Helvetica, Arial, sans-serf; font-size: 10
             }
         }
 
+        // ReSharper disable once UnusedMember.Local
         static string Cleanup(string message, int width = 0)
         {
             var msg = message.Replace("\r", "").Replace("\n", " ").Replace("\t", " ");
