@@ -66,7 +66,7 @@
 .line {border-left: 2px solid #aaa;height: 16px;margin-left: 11px;margin-right: 11px;}
 
 .tag path { stroke: #333; stroke-width: 1px; fill: none; opacity: 0.5; }
-.cmplx path { stroke: #aaa; stroke-width: 2px; fill: none;  opacity: 0.2;}
+.cmplx path { stroke: #000; stroke-width: 1px; fill: none;  opacity: 0.5;}
 path { stroke: #aaa; stroke-width: 1px; fill: none; }
 svg{border:none;overflow:visible}
 text { font-weight: 300; font-family: Helvetica, Arial, sans-serf; font-size: 10px; }
@@ -105,18 +105,18 @@ text { font-weight: 300; font-family: Helvetica, Arial, sans-serf; font-size: 10
     <path marker-end='url(#dot)' d='M-35,0L{3},0' style='opacity: 1;'></path>
 </g>";
         const string simpleLine = @"<g><path d='M{0},{1}L{2},{3}' style='opacity: 1;'></path></g>";
-        const string complexLine = @"<g class='cmplx'><path d='M{0},{1}L{2},{3}' style='opacity: 1;'></path></g>";
         const string commitMessage =
 @"<g class='tag' transform='translate({0},{1})'>
     <text x='20' y='3' text-anchor='start'>{2}</text>
 </g>";
 
+        const int cellMargin = 4;
+        const int cellw = 20;
+        const int cellh = 16;
+
         static void RenderCommitGraphToHtml(TextWriter f, ICommitGraph table, int rowLimit)
         {
             int originalRowLimit = rowLimit;
-            const int cellMargin = 4;
-            const int cellw = 20;
-            const int cellh = 16;
 
             var cells = table.Cells().ToArray();
 
@@ -140,7 +140,7 @@ text { font-weight: 300; font-family: Helvetica, Arial, sans-serf; font-size: 10
 
                 var complex = cell.ChildCells.Count(c => cell.Column == c.Column) > 1;
                 if (complex) { odd = !odd; }
-                int xoff = (odd) ? 13 : -13;
+                int depth = 1;
                 foreach (var child in cell.ChildCells)
                 {
                     if (child.Column != cell.Column) // a branch
@@ -153,8 +153,9 @@ text { font-weight: 300; font-family: Helvetica, Arial, sans-serf; font-size: 10
                     }
                     else // complex inheritance (this needs to look better!)
                     {
-                        sb.AppendFormat(complexLine, cellX(cell.Column) + xoff, cellY(cell.Row), cellX(child.Column) + xoff, cellY(child.Row));
-                        xoff += (odd) ? 3 : -3;
+                        sb.Append(DrawLoop(left: odd, depth: depth, x: cellX(cell.Column), yLower: cellY(cell.Row), yUpper: cellY(child.Row)));
+                        //sb.AppendFormat(complexLine, cellX(cell.Column) + xoff, cellY(cell.Row), cellX(child.Column) + xoff, cellY(child.Row));
+                        depth++;
                     }
                 }
             }
@@ -188,6 +189,22 @@ text { font-weight: 300; font-family: Helvetica, Arial, sans-serf; font-size: 10
             f.WriteLine(SvgHeader, rightMostEdgeOfSvg + 25, cellY(cells.Length) + 25);
             f.Write(sb.ToString());
             f.Write("</g></svg>");
+        }
+
+        const string complexLine = @"<g class='cmplx'><path d='M{0},{1} q{2} 0 {2} {3} L{4},{5} {4},{6} q0 {3} {7} {3}'></path></g>";
+        static string DrawLoop(bool left, int depth, int x, int yLower, int yUpper)
+        {
+            var offs = (left) ? (-(cellw / 2)) : (cellw / 2);
+            var stepping = (left) ? (-3 * depth) : (3 * depth);
+            var upPixDepth = -Math.Abs(stepping);
+            var pixDepth = stepping + offs;
+
+            var x_outer = x + pixDepth;
+
+            var yL1 = yLower + upPixDepth;
+            var yU1 = yUpper - upPixDepth;
+
+            return string.Format(complexLine, x, yLower, pixDepth, upPixDepth, x_outer, yL1, yU1, -pixDepth);
         }
 
         /// <summary>
