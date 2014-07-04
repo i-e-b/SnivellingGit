@@ -27,7 +27,7 @@
         /// <param name="commit">Commit point to add, from repository</param>
         /// <param name="sourceRefName">The name of the reference we are tracing from</param>
         /// <param name="remoteTide">The most recent commit on the remote for this ref. Used for display.</param>
-        public void AddCommit(CommitPoint commit, string sourceRefName, string remoteTide)
+        public bool AddCommit(CommitPoint commit, string sourceRefName, string remoteTide)
         {
             // 1. add parent/child relationships
             foreach (var parentId in commit.Parents)
@@ -36,7 +36,7 @@
             }
             
             // 2. if commit has been seen, exit. Otherwise note it seen.
-            if (_seenNodes.Contains(commit.Id)) return;
+            if (_seenNodes.Contains(commit.Id)) return true;
             _seenNodes.Add(commit.Id);
 
             // 3. Check tide (crossed means this commit is on a tracked remote)
@@ -44,6 +44,7 @@
 
             // 4. add commit point under sourceRefName group
             AddNode(commit, sourceRefName, tideCrossed);
+            return false;
         }
 
         void AddNode(CommitPoint commit, string sourceRefName, bool tideCrossed)
@@ -55,7 +56,7 @@
                 BranchNames = LookupOrEmpty(_refs, commit.Id),
                 Column = _refColumns[sourceRefName],
                 CommitPoint = commit,
-                IsMerge = commit.Parents.Length > 1,
+                IsMerge = commit.Parents.Count() > 1,
                 LocalOnly = !tideCrossed
             });
         }

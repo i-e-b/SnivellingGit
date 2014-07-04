@@ -10,12 +10,12 @@
         /// <summary>
         /// Add a commit. Must be added in child->parent->g.parent order.
         /// You should always trace from HEAD first, then other unmerged branches in reverse
-        /// chronological order (youngest first).
+        /// chronological order (youngest first). Returns true if this commit has already been seen.
         /// </summary>
         /// <param name="commit">Commit point to add, from repository</param>
         /// <param name="sourceRefName">The name of the reference we are tracing from</param>
         /// <param name="remoteTide">The most recent commit on the remote for this ref. Used for display.</param>
-        void AddCommit(CommitPoint commit, string sourceRefName, string remoteTide);
+        bool AddCommit(CommitPoint commit, string sourceRefName, string remoteTide);
 
         /// <summary>
         /// Add a remote reference. These are branches or tags that shouldn't get their own column (such as remotes).

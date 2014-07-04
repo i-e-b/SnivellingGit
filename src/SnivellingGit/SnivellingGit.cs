@@ -17,10 +17,10 @@
 
         static void Run()
         {
-            var repo = ObjectFactory.GetInstance<IRepoLoader>().Load("gits/repo-sample");
-            Console.WriteLine(
-                ObjectFactory.GetInstance<IHistoryRenderer>().Render(repo)
-            );
+            var repo = ObjectFactory.GetInstance<IRepoLoader>().Load("gits/vsvim");
+            //Console.WriteLine(
+            ObjectFactory.GetInstance<IHistoryRenderer>().Render(repo);
+            //);
         }
 
         /// <summary>

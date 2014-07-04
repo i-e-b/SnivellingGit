@@ -80,7 +80,7 @@ text { font-weight: 300; font-family: Helvetica, Arial, sans-serf; font-size: 10
 <svg width='{0}px' height='{1}px'>
 <g transform='translate(20,20)'>
 <defs>
-    <marker id='arrowhead' viewBox='0 0 10 10' refX='8' refY='5' markerUnits='strokeWidth' markerWidth='8' markerHeight='5' orient='auto' style='fill: #333'>
+    <marker id='arrow' viewBox='0 0 10 10' refX='8' refY='5' markerUnits='strokeWidth' markerWidth='8' markerHeight='5' orient='auto'>
         <path d='M 0 0 L 10 5 L 0 10 z'></path>
     </marker>
     <marker id='dot' viewBox='-10 -10 20 20' refX='0' refY='0' markerUnits='strokeWidth' markerWidth='10' markerHeight='10' orient='auto' style='fill: #333'>
@@ -89,11 +89,11 @@ text { font-weight: 300; font-family: Helvetica, Arial, sans-serf; font-size: 10
 </defs>";
         const string trackedNode =
 @"<g class='node' transform='translate({0},{1})'>
-    <rect rx='5' ry='5' x='-10' y='-8' width='20' height='16' style='fill:#{3}'><title>{2}</title></rect>
+    <rect rx='5' ry='5' x='-10' y='-8' width='20' height='14' style='fill:#{3}'><title>{2}</title></rect>
 </g>";
         const string localNode =
 @"<g class='node' transform='translate({0},{1})'>
-    <rect rx='5' ry='5' x='-10' y='-8' width='20' height='16' style='stroke:#{3}'><title>{2}</title></rect>
+    <rect rx='5' ry='5' x='-10' y='-8' width='20' height='14' style='stroke:#{3}'><title>{2}</title></rect>
 </g>";
         const string mergeNode =
 @"<g class='merge' transform='translate({0},{1})'>
@@ -116,8 +116,6 @@ text { font-weight: 300; font-family: Helvetica, Arial, sans-serf; font-size: 10
 
         static void RenderCommitGraphToHtml(TextWriter f, ICommitGraph table, int rowLimit)
         {
-            int originalRowLimit = rowLimit;
-
             var cells = table.Cells().ToArray();
 
             var widestLabel = cells.Select(c => GuessStringWidth(10, c.BranchNames.ToArray())).Max();
@@ -133,34 +131,9 @@ text { font-weight: 300; font-family: Helvetica, Arial, sans-serf; font-size: 10
             var sb = new StringBuilder();
 
             // Draw branch lines (overdrawn by nodes)
-            var odd = true;
-            foreach (var cell in cells)
-            {
-                if (rowLimit-- == 0) break;
+            bool odd;
+            DrawAncestryLines(rowLimit, cells, sb, cellX, cellY, out odd);
 
-                var complex = cell.ChildCells.Count(c => cell.Column == c.Column) > 1;
-                if (complex) { odd = !odd; }
-                int depth = 1;
-                foreach (var child in cell.ChildCells)
-                {
-                    if (child.Column != cell.Column) // a branch
-                    {
-                        sb.AppendFormat(simpleLine, cellX(cell.Column), cellY(cell.Row), cellX(child.Column), cellY(child.Row));
-                    }
-                    else if (!complex) // simple inheritance
-                    {
-                        sb.AppendFormat(simpleLine, cellX(cell.Column), cellY(cell.Row), cellX(child.Column), cellY(child.Row));
-                    }
-                    else // complex inheritance (this needs to look better!)
-                    {
-                        sb.Append(DrawLoop(left: odd, depth: depth, x: cellX(cell.Column), yLower: cellY(cell.Row), yUpper: cellY(child.Row)));
-                        //sb.AppendFormat(complexLine, cellX(cell.Column) + xoff, cellY(cell.Row), cellX(child.Column) + xoff, cellY(child.Row));
-                        depth++;
-                    }
-                }
-            }
-
-            rowLimit = originalRowLimit;
             foreach (var cell in cells)
             {
                 if (rowLimit-- == 0) break;
@@ -191,8 +164,43 @@ text { font-weight: 300; font-family: Helvetica, Arial, sans-serf; font-size: 10
             f.Write("</g></svg>");
         }
 
+        static void DrawAncestryLines(int rowLimit, IEnumerable<GraphCell> cells, StringBuilder sb, Func<int, int> cellX, Func<int, int> cellY, out bool odd)
+        {
+            odd = true;
+            foreach (var cell in cells)
+            {
+                if (rowLimit-- == 0)
+                {
+                    break;
+                }
+
+                var complex = cell.ChildCells.Count(c => cell.Column == c.Column) > 1;
+                if (complex)
+                {
+                    odd = !odd;
+                }
+                int depth = 1;
+                foreach (var child in cell.ChildCells)
+                {
+                    if (child.Column != cell.Column) // a branch
+                    {
+                        sb.AppendFormat(simpleLine, cellX(cell.Column), cellY(cell.Row), cellX(child.Column), cellY(child.Row));
+                    }
+                    else if (!complex) // simple inheritance
+                    {
+                        sb.AppendFormat(simpleLine, cellX(cell.Column), cellY(cell.Row), cellX(child.Column), cellY(child.Row));
+                    }
+                    else // complex inheritance
+                    {
+                        sb.Append(DrawLoop(left: odd, depth: depth, x: cellX(cell.Column), y1: cellY(cell.Row), y2: cellY(child.Row)));
+                        depth++;
+                    }
+                }
+            }
+        }
+
         const string complexLine = @"<g class='cmplx'><path d='M{0},{1} q{2} 0 {2} {3} L{4},{5} {4},{6} q0 {3} {7} {3}'></path></g>";
-        static string DrawLoop(bool left, int depth, int x, int yLower, int yUpper)
+        static string DrawLoop(bool left, int depth, int x, int y1, int y2)
         {
             var offs = (left) ? (-(cellw / 2)) : (cellw / 2);
             var stepping = (left) ? (-3 * depth) : (3 * depth);
@@ -200,6 +208,9 @@ text { font-weight: 300; font-family: Helvetica, Arial, sans-serf; font-size: 10
             var pixDepth = stepping + offs;
 
             var x_outer = x + pixDepth;
+
+            var yLower = Math.Max(y1,y2);
+            var yUpper = Math.Min(y1,y2);
 
             var yL1 = yLower + upPixDepth;
             var yU1 = yUpper - upPixDepth;
@@ -221,7 +232,8 @@ text { font-weight: 300; font-family: Helvetica, Arial, sans-serf; font-size: 10
 
             foreach (var part in parts)
             {
-                foreach (var c in part)
+                var chars = part.ToCharArray();
+                foreach (var c in chars)
                 {
                     switch (c)
                     {
@@ -243,7 +255,7 @@ text { font-weight: 300; font-family: Helvetica, Arial, sans-serf; font-size: 10
                         default:
                             l += char.IsUpper(c) ? wide : med;
                             break;
-                    }        
+                    }
                 }
             }
             return l;
@@ -267,14 +279,14 @@ text { font-weight: 300; font-family: Helvetica, Arial, sans-serf; font-size: 10
                 var masterTide = GetTide(master);
                 foreach (var commit in master.Commits)
                 {
-                    table.AddCommit(CommitPoint.FromGitCommit(commit), "master", masterTide);
+                    if (table.AddCommit(CommitPoint.FromGitCommit(commit), "master", masterTide)) break;
                 }
             }
 
             var headTide = GetTide(repo.Head);
             foreach (var commit in repo.Head.Commits)
             {
-                table.AddCommit(CommitPoint.FromGitCommit(commit), "Head", headTide);
+                if (table.AddCommit(CommitPoint.FromGitCommit(commit), "Head", headTide)) break;
             }
 
             foreach (var branch in repo.Branches.OrderByDescending(b => b.Tip.Author.When))
@@ -287,7 +299,7 @@ text { font-weight: 300; font-family: Helvetica, Arial, sans-serf; font-size: 10
                 var tide = GetTide(branch);
                 foreach (var commit in branch.Commits)
                 {
-                    table.AddCommit(CommitPoint.FromGitCommit(commit), branch.Name, tide);
+                    if (table.AddCommit(CommitPoint.FromGitCommit(commit), branch.Name, tide)) break;
                 }
 
             }
