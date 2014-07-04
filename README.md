@@ -23,6 +23,10 @@ SnivellingGit
 * merge with context after selecting
 * squash with context after selecting
 
+Comparison of Sg with `gitk --all`
+
+<img src="https://raw.githubusercontent.com/i-e-b/SnivellingGit/master/info/Simple%20comparison.png"/>
+
 ### References
 
 * http://tonsky.me/blog/reinventing-git-interface/
