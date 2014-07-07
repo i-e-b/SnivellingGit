@@ -18,11 +18,15 @@
         /// </summary>
         public bool AlwaysShowMasterFirst { get; set; }
 
-
         /// <summary>
         /// Default false. If true, complex merge ancestry will be hidden
         /// </summary>
         public bool ShowSimpleHistory { get; set; }
+
+        /// <summary>
+        /// Default false. If true, only show local branches
+        /// </summary>
+        public bool OnlyLocal { get; set; }
 
         /// <summary>
         /// Start a host from the current directory
@@ -290,6 +294,7 @@ text { font-weight: 300; font-family: Helvetica, Arial, sans-serf; font-size: 10
             table.AddReference("HEAD", repo.Head.Tip.Sha);
             foreach (var branchRef in repo.Branches)
             {
+                if (branchRef.IsRemote && OnlyLocal) continue;
                 table.AddReference(branchRef.Name, branchRef.Tip.Sha);
                 if (branchRef.IsTracking)
                 {
@@ -315,7 +320,7 @@ text { font-weight: 300; font-family: Helvetica, Arial, sans-serf; font-size: 10
 
             foreach (var branch in repo.Branches.OrderByDescending(b => b.Tip.Author.When))
             {
-
+                if (branch.IsRemote && OnlyLocal) continue;
                 if (branch.IsCurrentRepositoryHead) continue;
                 if (branch.Name == "master" && AlwaysShowMasterFirst) continue;
 

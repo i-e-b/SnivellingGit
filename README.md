@@ -6,6 +6,7 @@ SnivellingGit
 ### Todo
 
 * angle limit of branching line
+* only show complex ancestry lines on hover / select?
 * filter dead branches and redundant tags (like remote heads and when remotes match local)
 * Move head (checkout)
 * Add files ; commit ; push

@@ -36,6 +36,7 @@
             // set these with incoming query...
             renderer.AlwaysShowMasterFirst = flags.Contains("asm");
             renderer.ShowSimpleHistory = flags.Contains("simple");
+            renderer.OnlyLocal = flags.Contains("local");
 
             return renderer.Render(repo);
         }
@@ -45,7 +46,13 @@
             var result = new HashSet<string>();
             for (int i = 0; i < settings.Count; i++)
             {
-                if (settings.GetKey(i) == null) result.Add(settings[i]);
+                if (settings.GetKey(i) == null)
+                {
+                    foreach (var flag in settings[i].Split(new[]{','}, StringSplitOptions.RemoveEmptyEntries))
+                    {
+                        result.Add(flag);
+                    }
+                }
             }
             return result;
         }
