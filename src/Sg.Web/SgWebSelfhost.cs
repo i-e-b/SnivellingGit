@@ -1,6 +1,8 @@
 ﻿namespace Sg.Web
 {
     using System;
+    using System.Collections.Generic;
+    using System.Collections.Specialized;
     using System.Net;
     using SnivellingGit;
     using StructureMap;
@@ -24,11 +26,28 @@
         {
             rawResponse.AddHeader("Content-Type", "text/html");
 
-            var repo = ObjectFactory.GetInstance<IRepoLoader>().Load(request.Url.AbsolutePath);
+            var repoPath = request.Url.AbsolutePath;
+            var settings = request.QueryString;
+            var flags= GetFlags(settings);
+
+            var repo = ObjectFactory.GetInstance<IRepoLoader>().Load(repoPath);
             var renderer = ObjectFactory.GetInstance<IHistoryRenderer>();
-            renderer.AlwaysShowMasterFirst = true;
+
+            // set these with incoming query...
+            renderer.AlwaysShowMasterFirst = flags.Contains("asm");
+            renderer.ShowSimpleHistory = flags.Contains("simple");
 
             return renderer.Render(repo);
+        }
+
+        static ISet<string> GetFlags(NameValueCollection settings)
+        {
+            var result = new HashSet<string>();
+            for (int i = 0; i < settings.Count; i++)
+            {
+                if (settings.GetKey(i) == null) result.Add(settings[i]);
+            }
+            return result;
         }
     }
 }

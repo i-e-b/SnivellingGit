@@ -17,5 +17,10 @@
         /// To do: generalise this to any named branch
         /// </summary>
         bool AlwaysShowMasterFirst { get; set; }
+
+        /// <summary>
+        /// Default false. If true, complex merge ancestry will be hidden
+        /// </summary>
+        bool ShowSimpleHistory { get; set; }
     }
 }
