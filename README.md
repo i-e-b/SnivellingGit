@@ -20,6 +20,7 @@ SnivellingGit
 * show / hide unmerged remote branches (plus fetch all)
 * Change visualisation settings
 * flattened history by default (only unmerged branches spread out); Ancestry trace for indiviual commits (like gitk does); Per contributor display (column per person).
+* option to attribute-tag the last commit before a merge to show branch history?
 
 ### Implementation details
 
@@ -32,10 +33,10 @@ SnivellingGit
 
 Comparison of Sg with `gitk --all`
 ----------------------------------
-Only unmerged branches are show out-of-line:
+Only unmerged branches are show out-of-line. Non simple ancestry shown with arcs to the side.
 <img src="https://raw.githubusercontent.com/i-e-b/SnivellingGit/master/info/Simple%20comparison.png"/>
 
-Commits are shown in strict time order, rather than ancestry order:
+Commits are shown in strict time order, rather than ancestry order. Node colours are based on author's name.
 <img src="https://raw.githubusercontent.com/i-e-b/SnivellingGit/master/info/Time%20order%20vs%20ancestry%20order.png"/>
 
 ### References
