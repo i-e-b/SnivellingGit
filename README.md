@@ -3,11 +3,16 @@ SnivellingGit
 
 [![Build status](https://ci.appveyor.com/api/projects/status/6k8rb18w3e3gagqs)](https://ci.appveyor.com/project/i-e-b/snivellinggit) An experimental GUI for the Git SCM.
 
-### Todo
+
+### Immediate To Do
 
 * angle limit of branching line
 * only show complex ancestry lines on hover / select?
 * filter dead branches and redundant tags (like remote heads and when remotes match local)
+* split HTML and SVG rendering
+
+### Goals
+
 * Move head (checkout)
 * Add files ; commit ; push
 * fetch ; merge (probably best as separate?)
