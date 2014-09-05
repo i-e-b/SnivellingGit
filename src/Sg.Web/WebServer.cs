@@ -50,9 +50,12 @@
             try
             {
                 var rstr = _responderMethod(ctx.Request, ctx.Response);
-                var buf = Encoding.UTF8.GetBytes(rstr);
-                ctx.Response.ContentLength64 = buf.Length;
-                ctx.Response.OutputStream.Write(buf, 0, buf.Length);
+                if (rstr != null)
+                {
+                    var buf = Encoding.UTF8.GetBytes(rstr);
+                    ctx.Response.ContentLength64 = buf.Length;
+                    ctx.Response.OutputStream.Write(buf, 0, buf.Length);
+                }
             }
             catch (Exception ex_inner)
             {
@@ -60,7 +63,8 @@
             }
             finally
             {
-                ctx.Response.OutputStream.Close();
+                ctx.Response.OutputStream.Flush();
+                ctx.Response.OutputStream.Dispose();
             }
         }
 

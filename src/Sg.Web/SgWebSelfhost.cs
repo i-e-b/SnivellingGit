@@ -3,6 +3,7 @@
     using System;
     using System.Collections.Generic;
     using System.Collections.Specialized;
+    using System.IO;
     using System.Net;
     using SnivellingGit;
     using StructureMap;
@@ -24,11 +25,17 @@
 
         public static string SendResponse(HttpListenerRequest request, HttpListenerResponse rawResponse)
         {
-            rawResponse.AddHeader("Content-Type", "text/html");
-
             var repoPath = request.Url.AbsolutePath;
             var settings = request.QueryString;
             var flags= GetFlags(settings);
+
+            if (repoPath == "/favicon.ico")
+            {
+                WriteIcon(rawResponse);
+                return null;
+            }
+
+            rawResponse.AddHeader("Content-Type", "text/html");
 
             var repo = ObjectFactory.GetInstance<IRepoLoader>().Load(repoPath);
             var renderer = ObjectFactory.GetInstance<IHistoryRenderer>();
@@ -39,6 +46,22 @@
             renderer.OnlyLocal = flags.Contains("local");
 
             return renderer.Render(repo);
+        }
+
+        static void WriteIcon(HttpListenerResponse rawResponse)
+        {
+            if (!File.Exists("favicon.ico"))
+            {
+                rawResponse.StatusCode = 404;
+                return;
+            }
+
+            rawResponse.AddHeader("Content-Type", "image/png");
+            rawResponse.AddHeader("Cache-Control", "max-age=604800, public"); // check once a week
+
+            using (var fs = File.OpenRead("favicon.ico")) {
+                fs.CopyTo(rawResponse.OutputStream);
+            }
         }
 
         static ISet<string> GetFlags(NameValueCollection settings)
