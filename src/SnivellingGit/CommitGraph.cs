@@ -12,10 +12,14 @@
         /// <summary> parent -> children </summary>
         readonly Dictionary<string, HashSet<string>> _reverseEdges = new Dictionary<string, HashSet<string>>();
 
+        readonly HashSet<string> _prunableRefs = new HashSet<string>();
+
         /// <summary> source ref -> column </summary>
         readonly Dictionary<string, int> _refColumns = new Dictionary<string, int>();
         /// <summary> source ref -> tide seen </summary>
         readonly Dictionary<string, bool> _refTides = new Dictionary<string, bool>();
+
+        /// <summary> tip SHA -> reference names </summary>
         readonly Dictionary<string, List<string>> _refs = new Dictionary<string, List<string>>();
         readonly HashSet<string> _seenNodes = new HashSet<string>();
 
@@ -57,7 +61,8 @@
                 Column = _refColumns[sourceRefName],
                 CommitPoint = commit,
                 IsMerge = commit.Parents.Count() > 1,
-                LocalOnly = !tideCrossed
+                LocalOnly = !tideCrossed,
+                IsPrunable = _prunableRefs.Contains(commit.Id)
             });
         }
 
@@ -87,6 +92,16 @@
         public void AddReference(string name, string commitId)
         {
             SafeAdd(_refs, commitId, name);
+        }
+
+        /// <summary>
+        /// Add a commit 
+        /// </summary>
+        /// <param name="commitId"></param>
+        public void MarkPrunable(string commitId)
+        {
+            if (string.IsNullOrWhiteSpace(commitId)) return;
+            _prunableRefs.Add(commitId);
         }
 
         static void SafeAdd(IDictionary<string, List<string>> refs, string tip, string name)

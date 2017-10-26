@@ -42,5 +42,11 @@
         /// True if this commit is only in the local repo. False if it is on a tracked remote.
         /// </summary>
         public bool LocalOnly { get; set; }
+
+        /// <summary>
+        /// True if the local branch tracks a remote that has been deleted.
+        /// (would be removed by a `git fetch --prune`)
+        /// </summary>
+        public bool IsPrunable { get; set; }
     }
 }

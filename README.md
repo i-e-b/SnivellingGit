@@ -1,7 +1,9 @@
 SnivellingGit
 =============
 
-[![Build status](https://ci.appveyor.com/api/projects/status/6k8rb18w3e3gagqs)](https://ci.appveyor.com/project/i-e-b/snivellinggit) An experimental GUI for the Git SCM.
+An experimental GUI for the Git SCM.
+To use, run the Sg.Web self-host exe, and then load the stated Url in your browser.
+Remember to include a path to your target git directory (i.e. `C:\Work\MyProj` would need a url of `http://localhost:8080/Work/MyProj`)
 
 
 ### Immediate To Do

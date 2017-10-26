@@ -10,7 +10,7 @@
 
     class SgWebSelfhost
     {
-        static void Main(string[] args)
+        static void Main()
         {
             const string listen = "http://localhost:8080/";
             SnivellingGit.Configure();

@@ -17,7 +17,7 @@
 
         static void Run()
         {
-            var repo = ObjectFactory.GetInstance<IRepoLoader>().Load("gits/vsvim");
+            var repo = ObjectFactory.GetInstance<IRepoLoader>().Load("/Work/MyGoCompare");
             //Console.WriteLine(
             ObjectFactory.GetInstance<IHistoryRenderer>().Render(repo);
             //);
