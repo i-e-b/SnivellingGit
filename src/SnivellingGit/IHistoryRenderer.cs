@@ -27,5 +27,10 @@
         /// Default false. If true, only show local branches
         /// </summary>
         bool OnlyLocal { get; set; }
+
+        /// <summary>
+        /// If set, the matching commit (by SHA hash) will blink
+        /// </summary>
+        string CommitIdToHilight { get; set; }
     }
 }

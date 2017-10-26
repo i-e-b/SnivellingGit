@@ -29,6 +29,11 @@
         public bool OnlyLocal { get; set; }
 
         /// <summary>
+        /// If set, the matching commit (by SHA hash) will blink
+        /// </summary>
+        public string CommitIdToHilight { get; set; }
+
+        /// <summary>
         /// Start a host from the current directory
         /// </summary>
         public string Render(IRepository repo)
@@ -42,20 +47,23 @@
             WriteHtmlHeader(outp);
 
             var status = repo.Index.RetrieveStatus();
-            var wc = repo.Diff.Compare<TreeChanges>();
 
-            var stg = string.Join(", ", status.Staged.Select(s => s.FilePath));
+            outp.WriteLine("<p>Currently checked out: <span class=\"data\">" + repo.Head.CanonicalName + "</span></p>");
+            outp.WriteLine("<p>Working copy:<span class=\"data\"> " + status.Added.Count() + " added, " + status.Removed.Count() + " deleted, " + status.Modified.Count() + " modified; ");
+            outp.WriteLine(status.Staged.Count() + " staged for next commit.</span></p>");
 
-            outp.WriteLine("<p>Working copy: " + wc.Added.Count() + " added, " + wc.Deleted.Count() + " deleted, " + wc.Modified.Count() + " modified.</p>");
+            outp.WriteLine("<p>Current interactive operation '" + repo.Info.CurrentOperation + "'</p>");
+            outp.WriteLine("<p>History contains " + HistoryWalker.SafeEnumerate(repo.Commits).Count() + " commits</p>");
 
-            outp.WriteLine("<p>Staged files: " + stg + "</p>");
-            outp.WriteLine("<p>Undergoing operation " + repo.Info.CurrentOperation + "</p>");
-            outp.WriteLine("<p>" + HistoryWalker.SafeEnumerate(repo.Commits).Count() + " commits</p>");
-            outp.WriteLine("<p>  currently on " + repo.Head.CanonicalName + "</p>");
-            outp.WriteLine("<p>&middot;branches " + string.Join(", ", repo.Branches.Select(b => b.CanonicalName)) + ";</p>");
-            outp.WriteLine("<p>&middot;tags: " + string.Join(", ", repo.Tags.Select(t => t.Name)) + ";</p>");
+            outp.WriteLine("<div class=\"floatBox\">Branches<br/>" 
+                + string.Join("<br/>", repo.Branches.Select(b => "<a href=\"?show="+b.Tip.Sha+"\">"+b.CanonicalName+"</a>"))
+                + "</div>");
 
-            RenderCommitGraphToHtml(outp, table, rowLimit:100);
+            outp.WriteLine("<div class=\"floatBox\">Tags<br/>" 
+                           + string.Join("<br/>", repo.Tags.Select(b => "<a href=\"?show="+b.Target.Sha+"\">"+b.Name+"</a>"))
+                           + "</div>");
+
+            RenderCommitGraphToHtml(outp, table, CommitIdToHilight, rowLimit:100);
             WriteHtmlFooter(outp);
 
             return outp.ToString();
@@ -86,6 +94,16 @@ svg{border:none;overflow:visible}
 text { font-weight: 300; font-family: Helvetica, Arial, sans-serf; font-size: 10px; }
 .node rect { stroke-width: 2px; stroke: #333; fill: #fff; opacity: 1;}
 .merge circle { stroke-width: 2px; stroke: #bbb; fill: #fff; opacity: 1;}
+
+.data {font-family: monospace; font-size:10px;}
+p {font-size:12px;}
+@keyframes blink {
+  0%  { opacity:1.0 }
+  50% { opacity:0.4 }
+}
+.blink { animation-name: blink; animation-duration: 1s; animation-iteration-count: infinite; }
+
+.floatBox { float: left; height: 100px; overflow-y: scroll; margin-right: 10px; }
 ";
         const string SvgHeader = @"
 <svg width='{0}px' height='{1}px'>
@@ -99,15 +117,15 @@ text { font-weight: 300; font-family: Helvetica, Arial, sans-serf; font-size: 10
     </marker>
 </defs>";
         const string trackedNode =
-@"<g class='node' transform='translate({0},{1})'>
+@"<g class='node {4}' transform='translate({0},{1})'>
     <rect rx='5' ry='5' x='-10' y='-8' width='20' height='14' style='fill:#{3}'><title>{2}</title></rect>
 </g>";
         const string localNode =
-@"<g class='node' transform='translate({0},{1})'>
+@"<g class='node {4}' transform='translate({0},{1})'>
     <rect rx='5' ry='5' x='-10' y='-8' width='20' height='14' style='stroke:#{3}'><title>(untracked) {2}</title></rect>
 </g>";
         const string mergeNode =
-@"<g class='merge' transform='translate({0},{1})'>
+@"<g class='merge {3}' transform='translate({0},{1})'>
     <circle cx='0' cy='0' r='7'><title>{2}</title></circle>
 </g>";
         const string branchTagAnnotation =
@@ -117,7 +135,7 @@ text { font-weight: 300; font-family: Helvetica, Arial, sans-serf; font-size: 10
 </g>";
         const string simpleLine = @"<g><path d='M{0},{1}L{2},{3}' style='opacity: 1;'></path></g>";
         const string commitMessage =
-@"<g class='tag' transform='translate({0},{1})'>
+@"<g class='tag {3}' transform='translate({0},{1})'>
     <text x='20' y='3' text-anchor='start'>{2}</text>
 </g>";
 
@@ -126,7 +144,7 @@ text { font-weight: 300; font-family: Helvetica, Arial, sans-serf; font-size: 10
         const int cellmarginw = cellw + 10;
         const int cellh = 14;
 
-        void RenderCommitGraphToHtml(TextWriter f, ICommitGraph table, int rowLimit)
+        void RenderCommitGraphToHtml(TextWriter f, ICommitGraph table, string hiliteSha, int rowLimit)
         {
             var cells = table.Cells().ToArray();
 
@@ -150,26 +168,29 @@ text { font-weight: 300; font-family: Helvetica, Arial, sans-serf; font-size: 10
             {
                 if (rowLimit-- == 0) break;
 
+                var styleClass = "";
+                if (cell.CommitPoint.Id == hiliteSha) styleClass += "blink ";
+
                 var title = cell.CommitPoint.Author+"\r\n"+cell.CommitPoint.Id;
                 // Draw node
                 if (cell.IsMerge)
                 {
-                    sb.AppendFormat(mergeNode, cellX(cell.Column), cellY(cell.Row), title);
+                    sb.AppendFormat(mergeNode, cellX(cell.Column), cellY(cell.Row), title, styleClass);
                 }
                 else
                 {
-                    sb.AppendFormat(cell.LocalOnly ? localNode : trackedNode, cellX(cell.Column), cellY(cell.Row), title, cell.CommitPoint.Colour);
+                    sb.AppendFormat(cell.LocalOnly ? localNode : trackedNode, cellX(cell.Column), cellY(cell.Row), title, cell.CommitPoint.Colour, styleClass);
                 }
 
                 // Draw commit message
-                sb.AppendFormat(commitMessage, rightMostNodeEdge, cellY(cell.Row), cell.CommitPoint.Message);
+                sb.AppendFormat(commitMessage, rightMostNodeEdge, cellY(cell.Row), cell.CommitPoint.Message, styleClass);
                 rightMostEdgeOfSvg = Math.Max(rightMostEdgeOfSvg, rightMostNodeEdge + GuessStringWidth(10, cell.CommitPoint.Message));
 
                 // Draw tags and branch names
                 if (cell.BranchNames.Any())
                 {
-                    var coloring = cell.IsPrunable ? "prune" : "";
-                    sb.AppendFormat(branchTagAnnotation, tagLabelMargin, cellY(cell.Row), string.Join(", ", cell.BranchNames), labelX(cell.Column) - 5, coloring);
+                    if (cell.IsPrunable) styleClass += "prune ";
+                    sb.AppendFormat(branchTagAnnotation, tagLabelMargin, cellY(cell.Row), string.Join(", ", cell.BranchNames), labelX(cell.Column) - 5, styleClass);
                 }
             }
 

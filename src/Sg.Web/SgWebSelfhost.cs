@@ -27,7 +27,6 @@
         {
             var repoPath = request.Url.AbsolutePath;
             var settings = request.QueryString;
-            var flags= GetFlags(settings);
 
             if (repoPath == "/favicon.ico")
             {
@@ -35,6 +34,12 @@
                 return null;
             }
 
+            return WriteMasterPage(rawResponse, repoPath, settings);
+        }
+
+        private static string WriteMasterPage(HttpListenerResponse rawResponse, string repoPath, NameValueCollection settings)
+        {
+            var flags= GetFlags(settings);
             rawResponse.AddHeader("Content-Type", "text/html");
 
             var repo = ObjectFactory.GetInstance<IRepoLoader>().Load(repoPath);
@@ -44,6 +49,8 @@
             renderer.AlwaysShowMasterFirst = flags.Contains("asm");
             renderer.ShowSimpleHistory = flags.Contains("simple");
             renderer.OnlyLocal = flags.Contains("local");
+
+            renderer.CommitIdToHilight = settings["show"];
 
             return renderer.Render(repo);
         }
@@ -64,6 +71,11 @@
             }
         }
 
+        /// <summary>
+        /// Read all query parameters where there is NO `key=value` pair.
+        /// These are treated as 'flags'
+        /// </summary>
+        /// <param name="settings">Request URL's query params</param>
         static ISet<string> GetFlags(NameValueCollection settings)
         {
             var result = new HashSet<string>();

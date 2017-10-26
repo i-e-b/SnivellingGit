@@ -12,9 +12,10 @@ Remember to include a path to your target git directory (i.e. `C:\Work\MyProj` w
   - url flag to set log limit
 * angle limit of branching line
 * only show complex ancestry lines on hover / select?
-* split HTML and SVG rendering
+* split HTML and SVG rendering?
 
 * Maybe a `git` console proxy on the page?
+* show common ancestor between two commits
 
 ### Goals
 
@@ -38,7 +39,7 @@ Remember to include a path to your target git directory (i.e. `C:\Work\MyProj` w
 
 Comparison of Sg with `gitk --all`
 ----------------------------------
-Only unmerged branches are show out-of-line. Non simple ancestry shown with arcs to the side.
+Only unmerged branches are shown out-of-line. Non simple ancestry shown with arcs to the side.
 <img src="https://raw.githubusercontent.com/i-e-b/SnivellingGit/master/info/Simple%20comparison.png"/>
 
 Commits are shown in strict time order, rather than ancestry order. Node colours are based on author's name.
