@@ -26,9 +26,14 @@
                 };
         }
 
+        /// <summary>
+        /// Make a semi-unique, non-white colour that is constant for any given string
+        /// </summary>
         static string MakeCssColour(string name)
         {
-            return name.GetHashCode().ToString("X").Substring(0,3);
+            var proposed = name.GetHashCode().ToString("X").Substring(0, 3);
+            if (proposed == "FFF") proposed = "CA9";
+            return proposed;
         }
 
         /// <summary>

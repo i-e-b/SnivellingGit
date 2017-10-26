@@ -55,7 +55,7 @@
             outp.WriteLine("<p>&middot;branches " + string.Join(", ", repo.Branches.Select(b => b.CanonicalName)) + ";</p>");
             outp.WriteLine("<p>&middot;tags: " + string.Join(", ", repo.Tags.Select(t => t.Name)) + ";</p>");
 
-            RenderCommitGraphToHtml(outp, table, rowLimit:30);
+            RenderCommitGraphToHtml(outp, table, rowLimit:100);
             WriteHtmlFooter(outp);
 
             return outp.ToString();

@@ -8,10 +8,13 @@ Remember to include a path to your target git directory (i.e. `C:\Work\MyProj` w
 
 ### Immediate To Do
 
+* extend log limit a bit further if branches don't line up?
+  - url flag to set log limit
 * angle limit of branching line
 * only show complex ancestry lines on hover / select?
-* filter dead branches and redundant tags (like remote heads and when remotes match local)
 * split HTML and SVG rendering
+
+* Maybe a `git` console proxy on the page?
 
 ### Goals
 
