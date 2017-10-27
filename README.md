@@ -10,12 +10,11 @@ Remember to include a path to your target git directory (i.e. `C:\Work\MyProj` w
 
 * extend log limit a bit further if branches don't line up?
   - url flag to set log limit
-* angle limit of branching line (always have the same angle between columns, then join-up)
 * only show complex ancestry lines on hover / select?
 * split HTML and SVG rendering?
 
 * Maybe a `git` console proxy on the page?
-* show common ancestor between two commits
+* show common ancestor between two commits (on click, fade everything not directly connected?)
 
 ### Goals
 
