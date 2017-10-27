@@ -1,6 +1,5 @@
 ﻿namespace SnivellingGit
 {
-    using System;
     using StructureMap;
     using System.IO.Abstractions;
 
@@ -19,7 +18,7 @@
         {
             var repo = ObjectFactory.GetInstance<IRepoLoader>().Load("/Work/MyGoCompare");
             //Console.WriteLine(
-            ObjectFactory.GetInstance<IHistoryRenderer>().Render(repo);
+            ObjectFactory.GetInstance<IHistoryRenderer>().RenderRepositoryPage(repo, "");
             //);
         }
 

@@ -58,7 +58,7 @@ namespace Sg.Web
 
             renderer.CommitIdToHilight = settings["show"];
 
-            return renderer.Render(repo);
+            return renderer.RenderRepositoryPage(repo, string.Join(",",flags));
         }
 
         private static string NoSuchRepoPage(string repoPath)

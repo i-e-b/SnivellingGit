@@ -8,9 +8,9 @@
     public interface IHistoryRenderer
     {
         /// <summary>
-        /// Render a repository view from the given directory (should be a git root path or .git directory)
+        /// RenderRepositoryPage a repository view from the given directory (should be a git root path or .git directory)
         /// </summary>
-        string Render(IRepository repo);
+        string RenderRepositoryPage(IRepository repo, string flags);
 
         /// <summary>
         /// Default false. If true, try to show a branch named 'Master' before all others, including 'HEAD'.

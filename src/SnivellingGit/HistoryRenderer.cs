@@ -8,7 +8,7 @@
     using LibGit2Sharp;
 
     /// <summary>
-    /// Render an SVG from a git repository
+    /// RenderRepositoryPage an SVG from a git repository
     /// </summary>
     public class HistoryRenderer : IHistoryRenderer
     {
@@ -34,9 +34,10 @@
         public string CommitIdToHilight { get; set; }
 
         /// <summary>
-        /// Start a host from the current directory
+        /// Render a complete HTML page, containing status, controls and an SVG visualisation of the history.
+        /// TODO: split this up a bit more!
         /// </summary>
-        public string Render(IRepository repo)
+        public string RenderRepositoryPage(IRepository repo, string flags)
         {
             ICommitGraph table = new ColumnsCommitGraph();
 
@@ -58,12 +59,12 @@
                 outp.WriteLine("<p>History contains " + HistoryWalker.SafeEnumerate(repo.Commits).Count() + " commits</p>");
             outp.WriteLine("</div>");
 
-            outp.WriteLine("<div class=\"floatBox\">Branches <a href=\"?\">Select None</a><br/>" 
-                + string.Join("<br/>", repo.Branches.Select(b => "<a href=\"?show="+b.Tip.Sha+"\">"+b.CanonicalName+"</a>"))
+            outp.WriteLine("<div class=\"floatBox\">Branches <a href=\"?"+flags+"\">Select None</a><br/>" 
+                + string.Join("<br/>", repo.Branches.Select(b => "<a href=\"?"+flags+"&show="+b.Tip.Sha+"\">"+b.CanonicalName+"</a>"))
                 + "</div>");
 
-            outp.WriteLine("<div class=\"floatBox\">Tags <a href=\"?\">Select None</a><br/>" 
-                           + string.Join("<br/>", repo.Tags.OrderByDescending(t=>t.Name).Select(b => "<a href=\"?show="+b.Target.Sha+"\">"+b.Name+"</a>"))
+            outp.WriteLine("<div class=\"floatBox\">Tags <a href=\"?"+flags+"\">Select None</a><br/>" 
+                           + string.Join("<br/>", repo.Tags.OrderByDescending(t=>t.Name).Select(b => "<a href=\"?"+flags+"&show="+b.Target.Sha+"\">"+b.Name+"</a>"))
                            + "</div>");
 
             outp.WriteLine("<div style=\"clear:both\"></div>");
