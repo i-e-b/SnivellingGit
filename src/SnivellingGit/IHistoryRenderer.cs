@@ -21,7 +21,7 @@
         /// <summary>
         /// Default false. If true, complex merge ancestry will be hidden
         /// </summary>
-        bool ShowSimpleHistory { get; set; }
+        bool HideComplexHistory { get; set; }
 
         /// <summary>
         /// Default false. If true, only show local branches

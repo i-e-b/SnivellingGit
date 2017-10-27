@@ -10,7 +10,7 @@ Remember to include a path to your target git directory (i.e. `C:\Work\MyProj` w
 
 * extend log limit a bit further if branches don't line up?
   - url flag to set log limit
-* angle limit of branching line
+* angle limit of branching line (always have the same angle between columns, then join-up)
 * only show complex ancestry lines on hover / select?
 * split HTML and SVG rendering?
 

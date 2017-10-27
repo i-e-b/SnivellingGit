@@ -29,9 +29,18 @@ namespace SnivellingGit
             foreach (var drive in _fs.Directory.GetLogicalDrives())
             {
                 var candidate = Path.Combine(drive, requestedPath);
-                if (_fs.Directory.Exists(candidate)) return new Repository(candidate);
+                if (!_fs.Directory.Exists(candidate)) continue;
+
+                try
+                {
+                    return new Repository(candidate);
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine(ex);
+                }
             }
-            throw new Exception("Could not find an absolute path for "+requestedPath);
+            return null;
         }
     }
 }

@@ -1,4 +1,6 @@
-﻿namespace Sg.Web
+﻿using System.Text;
+
+namespace Sg.Web
 {
     using System;
     using System.Collections.Generic;
@@ -43,16 +45,30 @@
             rawResponse.AddHeader("Content-Type", "text/html");
 
             var repo = ObjectFactory.GetInstance<IRepoLoader>().Load(repoPath);
+            if (repo == null)
+            {
+                return NoSuchRepoPage(repoPath);
+            }
             var renderer = ObjectFactory.GetInstance<IHistoryRenderer>();
 
             // set these with incoming query...
             renderer.AlwaysShowMasterFirst = flags.Contains("asm");
-            renderer.ShowSimpleHistory = flags.Contains("simple");
+            renderer.HideComplexHistory = flags.Contains("simple");
             renderer.OnlyLocal = flags.Contains("local");
 
             renderer.CommitIdToHilight = settings["show"];
 
             return renderer.Render(repo);
+        }
+
+        private static string NoSuchRepoPage(string repoPath)
+        {
+            var sb = new StringBuilder();
+            sb.Append("<html><head><title>Not Found</title></head><body>");
+            sb.Append("<h1>Not found</h1>");
+            sb.Append("<p>The path at '"+repoPath+"' either does not exist, or is not part of a git repository</p>");
+            sb.Append("</body></html>");
+            return sb.ToString();
         }
 
         static void WriteIcon(HttpListenerResponse rawResponse)

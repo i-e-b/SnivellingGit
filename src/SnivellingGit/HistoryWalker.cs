@@ -23,7 +23,7 @@ namespace SnivellingGit
                 {
                     if (branchRef.TrackedBranch.Tip == null) // is prunable
                     {
-                        table.AddReference("✖ " + branchRef.Name, branchRef.Tip.Sha);
+                        table.AddReference(branchRef.Name, branchRef.Tip.Sha);
                         table.MarkPrunable(branchRef.Tip.Sha);
                     }
                     else // add remote reference

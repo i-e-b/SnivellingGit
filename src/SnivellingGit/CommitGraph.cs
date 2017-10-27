@@ -104,6 +104,7 @@
             _prunableRefs.Add(commitId);
         }
 
+
         static void SafeAdd(IDictionary<string, List<string>> refs, string tip, string name)
         {
             if (!refs.ContainsKey(tip))
@@ -137,7 +138,7 @@
             // sort by date, youngest first
             return cellSet;
         }
-
+        
         static IEnumerable<TV> FindAny<TK, TV>(IReadOnlyDictionary<TK, HashSet<TV>> reverseEdges, TK id)
         {
             if (reverseEdges.ContainsKey(id)) return reverseEdges[id];

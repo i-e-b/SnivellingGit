@@ -21,7 +21,7 @@
         /// <summary>
         /// Default false. If true, complex merge ancestry will be hidden
         /// </summary>
-        public bool ShowSimpleHistory { get; set; }
+        public bool HideComplexHistory { get; set; }
 
         /// <summary>
         /// Default false. If true, only show local branches
@@ -49,19 +49,24 @@
             var status = repo.Index.RetrieveStatus();
 
             outp.WriteLine("<p>Currently checked out: <span class=\"data\">" + repo.Head.CanonicalName + "</span></p>");
-            outp.WriteLine("<p>Working copy:<span class=\"data\"> " + status.Added.Count() + " added, " + status.Removed.Count() + " deleted, " + status.Modified.Count() + " modified; ");
-            outp.WriteLine(status.Staged.Count() + " staged for next commit.</span></p>");
 
-            outp.WriteLine("<p>Current interactive operation '" + repo.Info.CurrentOperation + "'</p>");
-            outp.WriteLine("<p>History contains " + HistoryWalker.SafeEnumerate(repo.Commits).Count() + " commits</p>");
+            outp.WriteLine("<div class=\"floatBox\">");
+                outp.WriteLine("<p>Working copy:<span class=\"data\"> " + status.Added.Count() + " added, " + status.Removed.Count() + " deleted, " + status.Modified.Count() + " modified; ");
+                outp.WriteLine(status.Staged.Count() + " staged for next commit.</span></p>");
 
-            outp.WriteLine("<div class=\"floatBox\">Branches<br/>" 
+                outp.WriteLine("<p>Current interactive operation '" + repo.Info.CurrentOperation + "'</p>");
+                outp.WriteLine("<p>History contains " + HistoryWalker.SafeEnumerate(repo.Commits).Count() + " commits</p>");
+            outp.WriteLine("</div>");
+
+            outp.WriteLine("<div class=\"floatBox\">Branches <a href=\"?\">Select None</a><br/>" 
                 + string.Join("<br/>", repo.Branches.Select(b => "<a href=\"?show="+b.Tip.Sha+"\">"+b.CanonicalName+"</a>"))
                 + "</div>");
 
-            outp.WriteLine("<div class=\"floatBox\">Tags<br/>" 
-                           + string.Join("<br/>", repo.Tags.Select(b => "<a href=\"?show="+b.Target.Sha+"\">"+b.Name+"</a>"))
+            outp.WriteLine("<div class=\"floatBox\">Tags <a href=\"?\">Select None</a><br/>" 
+                           + string.Join("<br/>", repo.Tags.OrderByDescending(t=>t.Name).Select(b => "<a href=\"?show="+b.Target.Sha+"\">"+b.Name+"</a>"))
                            + "</div>");
+
+            outp.WriteLine("<div style=\"clear:both\"></div>");
 
             RenderCommitGraphToHtml(outp, table, CommitIdToHilight, rowLimit:100);
             WriteHtmlFooter(outp);
@@ -85,9 +90,12 @@
 .commit {width:24px;height:16px;border-radius:5px;-moz-border-radius:5px;-webkit-border-radius:5px;}
 .line {border-left: 2px solid #aaa;height: 16px;margin-left: 11px;margin-right: 11px;}
 
-.tag path { stroke: #333; stroke-width: 1px; fill: none; opacity: 0.5; }
 .prune { fill:#f00; }
+.headCell { fill:#5b5; }
+.tag path { stroke: #333; stroke-width: 1px; fill: none; opacity: 0.5; }
 .cmplx path { stroke: #000; stroke-width: 1px; fill: none;  opacity: 0.2;}
+.link path { stroke: #aaa; stroke-width: 1px; fill: none;  opacity: 1;}
+path:hover { stroke: #000; stroke-width: 2px; fill: none;  opacity: 1;}
 path { stroke: #aaa; stroke-width: 1px; fill: none; }
 #arrow path { stroke: #000; stroke-width: 1px; fill: #000; }
 svg{border:none;overflow:visible}
@@ -97,13 +105,14 @@ text { font-weight: 300; font-family: Helvetica, Arial, sans-serf; font-size: 10
 
 .data {font-family: monospace; font-size:10px;}
 p {font-size:12px;}
+a, a:link, a:visited, a:hover, a:active {color: #000; text-decoration: underline; font-family: monospace; font-size:11px;}
 @keyframes blink {
   0%  { opacity:1.0 }
   50% { opacity:0.4 }
 }
 .blink { animation-name: blink; animation-duration: 1s; animation-iteration-count: infinite; }
 
-.floatBox { float: left; height: 100px; overflow-y: scroll; margin-right: 10px; }
+.floatBox { float: left; height: 100px; overflow-y: scroll; margin: 10px; padding: 10px; }
 ";
         const string SvgHeader = @"
 <svg width='{0}px' height='{1}px'>
@@ -133,7 +142,6 @@ p {font-size:12px;}
     <text x='-40' y='3' text-anchor='end' class='{4}'>{2}</text>
     <path marker-end='url(#dot)' d='M-35,0L{3},0' style='opacity: 1;'></path>
 </g>";
-        const string simpleLine = @"<g><path d='M{0},{1}L{2},{3}' style='opacity: 1;'></path></g>";
         const string commitMessage =
 @"<g class='tag {3}' transform='translate({0},{1})'>
     <text x='20' y='3' text-anchor='start'>{2}</text>
@@ -161,8 +169,7 @@ p {font-size:12px;}
             var sb = new StringBuilder();
 
             // Draw branch lines (overdrawn by nodes)
-            bool odd;
-            DrawAncestryLines(rowLimit, cells, sb, cellX, cellY, out odd);
+            DrawAncestryLines(rowLimit, cells, sb, cellX, cellY);
 
             foreach (var cell in cells)
             {
@@ -190,6 +197,7 @@ p {font-size:12px;}
                 if (cell.BranchNames.Any())
                 {
                     if (cell.IsPrunable) styleClass += "prune ";
+                    if (cell.BranchNames.Contains("HEAD")) styleClass += "headCell ";
                     sb.AppendFormat(branchTagAnnotation, tagLabelMargin, cellY(cell.Row), string.Join(", ", cell.BranchNames), labelX(cell.Column) - 5, styleClass);
                 }
             }
@@ -199,54 +207,118 @@ p {font-size:12px;}
             f.Write("</g></svg>");
         }
 
-        void DrawAncestryLines(int rowLimit, IEnumerable<GraphCell> cells, StringBuilder sb, Func<int, int> cellX, Func<int, int> cellY, out bool odd)
+        void DrawAncestryLines(int rowLimit, ICollection<GraphCell> cells, StringBuilder sb, Func<int, int> cellX, Func<int, int> cellY)
         {
-            odd = true;
+            var odd = true;
             foreach (var cell in cells) // increasing row number
             {
-                if (rowLimit-- == 0)
-                {
-                    break;
-                }
+                if (rowLimit-- == 0) { break; }
 
-                var complex = cell.ChildCells.Count(c => cell.Column == c.Column) > 1;
-                if (complex)
-                {
-                    odd = !odd;
-                }
-                int depth = 1;
+                var depth = 1;
                 foreach (var child in cell.ChildCells) // increasing row number
                 {
+                    var complex = !HideComplexHistory && AreCellsBetween(cells, cell.Column, cell.Row, child.Row);
+
+                    if (complex)
+                    {
+                        odd = !odd;
+                    }
                     var distance = Math.Abs(child.Row - cell.Row);
 
-                    if (child.Column != cell.Column) // an unmerged branch
-                    {
-                        sb.AppendFormat(simpleLine, cellX(cell.Column), cellY(cell.Row), cellX(child.Column), cellY(child.Row));
-                    }
-                    else if (!complex) // simple inheritance
-                    {
-                        if (child.IsMerge && distance > 1) // actually complex. Show on left.
-                        {
-                            if (!ShowSimpleHistory)
-                            {
-                                sb.Append(DrawLoop(left: true, depth: distance, x: cellX(cell.Column), y1: cellY(cell.Row), y2: cellY(child.Row)));
-                            }
-                        }
-                        else // really simple, draw a straight line between the two
-                        {
-                            sb.AppendFormat(simpleLine, cellX(cell.Column), cellY(child.Row), cellX(child.Column), cellY(cell.Row));
-                        }
-                    }
-                    else // complex inheritance, show on right
-                    {
-                        if (!ShowSimpleHistory)
-                        {
-                            sb.Append(DrawLoop(left: odd, depth: depth, x: cellX(cell.Column), y1: cellY(cell.Row), y2: cellY(child.Row)));
-                            depth++;
-                        }
-                    }
+                    depth = ConnectCells(sb, cells, child, cell, cellX, cellY, odd, complex, distance, depth);
                 }
             }
+        }
+
+        
+        const string simpleLine = @"<g class='link'><path d='M{0},{1}L{2},{3}' ></path></g>";
+        const string crookLine = @"<g class='link'><path d='M{0},{1}L{2},{3}L{4},{5}'></path></g>";
+        /// <summary>
+        /// Draw lines between two cells. Only to be used by DrawAncestryLines
+        /// </summary>
+        private int ConnectCells(StringBuilder sb, ICollection<GraphCell>  allCells, GraphCell child, GraphCell parent, Func<int, int> cellX, Func<int, int> cellY, bool odd, bool complex, int distance, int depth)
+        {
+            if (child.Column != parent.Column) // an unmerged branch
+            {
+                DrawDirectBranchingLine(sb, allCells, child, parent, cellX, cellY);
+            }
+            else if (!complex || HideComplexHistory) // simple inheritance
+            {
+                if (child.IsMerge && distance > 1 && ! HideComplexHistory) // actually complex. Show on left.
+                {
+                    var jitter = child.Row % 4;
+                    sb.Append(DrawLoop(left: true, depth: distance, x: cellX(parent.Column) - jitter, y1: cellY(parent.Row), y2: cellY(child.Row)));
+                }
+                else // really simple, draw a straight line between the two
+                {
+                    sb.AppendFormat(simpleLine, cellX(parent.Column), cellY(child.Row), cellX(child.Column), cellY(parent.Row));
+                }
+            }
+            else // complex inheritance, show on right
+            {
+                sb.Append(DrawLoop(left: odd, depth: depth, x: cellX(parent.Column), y1: cellY(parent.Row), y2: cellY(child.Row)));
+                depth++;
+            }
+            return depth;
+        }
+
+        private void DrawDirectBranchingLine(StringBuilder sb, ICollection<GraphCell> allCells, GraphCell child, GraphCell parent, Func<int, int> cellX, Func<int, int> cellY)
+        {
+            // Try and stop weird merges from making unreadable paths:
+            // 1) if steps across > steps up, do a straight line
+            // 2) if there are no cells in the child column further down that this one, use a bottom crook line (goes across before up)
+            // 3) if there are no cells in the parent column between parent and child, use a top crook line (goes up before across)
+            // 4) else use a straight line
+
+            var stepsAcross = Math.Abs(parent.Column - child.Column);
+            var stepsUp = Math.Abs(parent.Row - child.Row);
+            var childColObscured = AreCellsBetween(allCells, child.Column, parent.Row, child.Row);
+            var parentColObscured = AreCellsBetween(allCells, parent.Column, child.Row, parent.Row);
+
+            // bottom crook:
+            var bcx = cellX(child.Column);
+            var bcy = Math.Max(cellY(child.Row), cellY(parent.Row - Math.Abs(parent.Column - child.Column)));
+
+            // straight:
+            var slx = cellX(parent.Column);
+            var sly = cellY(parent.Row);
+
+            // top crook:
+            var tcx = cellX(parent.Column);
+            var tcy = Math.Max(cellY(child.Row), cellY(child.Row + Math.Abs(parent.Column - child.Column)));
+
+            int mid_x = slx, mid_y = sly;
+
+            if (stepsAcross >= stepsUp)
+            {
+                mid_x = slx;
+                mid_y = sly;
+            }
+            else if (!childColObscured)
+            {
+                mid_x = bcx;
+                mid_y = bcy;
+            }
+            else if (!parentColObscured)
+            {
+                mid_x = tcx;
+                mid_y = tcy;
+            }
+
+
+            sb.AppendFormat(crookLine,
+                cellX(parent.Column), cellY(parent.Row),
+                mid_x, mid_y,
+                cellX(child.Column), cellY(child.Row));
+        }
+
+        private bool AreCellsBetween(ICollection<GraphCell> allCells, int column, int rowA, int rowB)
+        {
+            var min = Math.Min(rowA, rowB);
+            var max = Math.Max(rowA, rowB);
+
+            // this is getting called quite a lot. Probably good to look at a more optimal storage
+            return allCells.Any(c => c.Column == column && c.Row >= min && c.Row <= max && c.Row != rowB && c.Row != rowA);
         }
 
         const string complexLine = @"<g class='cmplx'><path d='M{0},{1} q{2} 0 {2} {3} L{4},{5} {4},{6} q0 {3} {7} {3}'></path></g>";
@@ -272,7 +344,7 @@ p {font-size:12px;}
         /// <summary>
         /// Guess the width for a proportional font.
         /// NOT ACCURATE.
-        /// TODO: have a client side library adjust the guesses with measurements
+        /// It would be good to have a client side library adjust the guesses with measurements
         /// </summary>
         static int GuessStringWidth(int fontSizePx, params string[] parts)
         {
