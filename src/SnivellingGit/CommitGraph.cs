@@ -109,7 +109,7 @@
             {
                 refs.Add(tip, new List<string>());
             }
-            refs[tip].Add(name);
+            if (!refs[tip].Contains(name)) refs[tip].Add(name);
         }
         
         /// <summary>

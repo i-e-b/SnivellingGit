@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using LibGit2Sharp;
 
@@ -14,6 +15,12 @@ namespace SnivellingGit
         /// </summary>
         public static void BuildCommitGraph(IRepository repo, ICommitGraph table, bool OnlyLocal, bool AlwaysShowMasterFirst)
         {
+            if (repo.Head == null || repo.Head.Tip == null)
+            {
+                table.AddCommit(new CommitPoint("0", "Empty Repo", DateTimeOffset.Now, new string[0]), "Empty", "");
+                return;
+            }
+
             table.AddReference("HEAD", repo.Head.Tip.Sha);
             foreach (var branchRef in repo.Branches)
             {
@@ -25,16 +32,14 @@ namespace SnivellingGit
                     {
                         table.MarkPrunable(branchRef.Tip.Sha);
                     }
-                    else // add remote reference
+                    else if (! OnlyLocal) // add remote reference
                     {
                         table.AddReference(branchRef.TrackedBranch.Name, branchRef.TrackedBranch.Tip.Sha);
                     }
                 }
 
-                if (!branchRef.IsRemote) // add local reference
-                {
-                    table.AddReference(branchRef.Name, branchRef.Tip.Sha);
-                }
+                // add direct reference (may be local, or untracked remote)
+                table.AddReference(branchRef.Name, branchRef.Tip.Sha);
             }
 
             var master = repo.Branches["master"];

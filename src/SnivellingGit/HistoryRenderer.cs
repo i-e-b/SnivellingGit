@@ -221,6 +221,7 @@ a, a:link, a:visited, a:hover, a:active {color: #000; text-decoration: underline
         void DrawAncestryLines(int rowLimit, ICollection<GraphCell> cells, StringBuilder sb, Func<int, int> cellX, Func<int, int> cellY)
         {
             var odd = true;
+            var loops = new LoopPlacer(cells);
             foreach (var cell in cells) // increasing row number
             {
                 if (rowLimit-- == 0) { break; }
@@ -236,7 +237,7 @@ a, a:link, a:visited, a:hover, a:active {color: #000; text-decoration: underline
                     }
                     var distance = Math.Abs(child.Row - cell.Row);
 
-                    depth = ConnectCells(sb, cells, child, cell, cellX, cellY, odd, complex, distance, depth);
+                    depth = ConnectCells(sb, loops, cells, child, cell, cellX, cellY, odd, complex, distance, depth);
                 }
             }
         }
@@ -247,8 +248,10 @@ a, a:link, a:visited, a:hover, a:active {color: #000; text-decoration: underline
         /// <summary>
         /// Draw lines between two cells. Only to be used by DrawAncestryLines
         /// </summary>
-        private int ConnectCells(StringBuilder sb, ICollection<GraphCell>  allCells, GraphCell child, GraphCell parent, Func<int, int> cellX, Func<int, int> cellY, bool odd, bool complex, int distance, int depth)
+        private int ConnectCells(StringBuilder sb, LoopPlacer loops, ICollection<GraphCell>  allCells, GraphCell child, GraphCell parent, Func<int, int> cellX, Func<int, int> cellY, bool odd, bool complex, int distance, int depth)
         {
+            bool isLeft; int loopDepth;
+
             if (child.Column != parent.Column) // an unmerged branch
             {
                 DrawDirectBranchingLine(sb, allCells, child, parent, cellX, cellY);
@@ -257,8 +260,9 @@ a, a:link, a:visited, a:hover, a:active {color: #000; text-decoration: underline
             {
                 if (child.IsMerge && distance > 1 && ! HideComplexHistory) // actually complex. Show on left.
                 {
-                    var jitter = child.Row % 4;
-                    sb.Append(DrawLoop(left: true, depth: distance, x: cellX(parent.Column) - jitter, y1: cellY(parent.Row), y2: cellY(child.Row)));
+                    loops.FindLeastDepth(parent.Column, parent.Row, child.Row, out isLeft, out loopDepth);
+                    loops.SetDepth(parent.Column, parent.Row, child.Row, isLeft, loopDepth);
+                    sb.Append(DrawLoop(left: isLeft, depth: loopDepth, x: cellX(parent.Column), y1: cellY(parent.Row), y2: cellY(child.Row)));
                 }
                 else // really simple, draw a straight line between the two
                 {
@@ -267,7 +271,9 @@ a, a:link, a:visited, a:hover, a:active {color: #000; text-decoration: underline
             }
             else // complex inheritance, show on right
             {
-                sb.Append(DrawLoop(left: odd, depth: depth, x: cellX(parent.Column), y1: cellY(parent.Row), y2: cellY(child.Row)));
+                loops.FindLeastDepth(parent.Column, parent.Row, child.Row, out isLeft, out loopDepth);
+                loops.SetDepth(parent.Column, parent.Row, child.Row, isLeft, loopDepth);
+                sb.Append(DrawLoop(left: isLeft, depth: loopDepth, x: cellX(parent.Column), y1: cellY(parent.Row), y2: cellY(child.Row)));
                 depth++;
             }
             return depth;
@@ -336,7 +342,7 @@ a, a:link, a:visited, a:hover, a:active {color: #000; text-decoration: underline
         static string DrawLoop(bool left, int depth, int x, int y1, int y2)
         {
             var offs = (left) ? (-(cellw / 2)) : (cellw / 2);
-            var stepping = (left) ? ((-3 * depth) - 3) : ((3 * depth) + 3);
+            var stepping = (left) ? ((-2 * depth) - 3) : ((2 * depth) + 3);
             var upPixDepth = -Math.Abs(stepping);
             var pixDepth = stepping;
 
