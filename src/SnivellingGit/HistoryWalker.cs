@@ -23,15 +23,15 @@ namespace SnivellingGit
                 {
                     if (branchRef.TrackedBranch.Tip == null) // is prunable
                     {
-                        table.AddReference(branchRef.Name, branchRef.Tip.Sha);
                         table.MarkPrunable(branchRef.Tip.Sha);
                     }
                     else // add remote reference
                     {
-                        table.AddReference(branchRef.Name, branchRef.TrackedBranch.Tip.Sha);
+                        table.AddReference(branchRef.TrackedBranch.Name, branchRef.TrackedBranch.Tip.Sha);
                     }
                 }
-                else // add local reference
+
+                if (!branchRef.IsRemote) // add local reference
                 {
                     table.AddReference(branchRef.Name, branchRef.Tip.Sha);
                 }

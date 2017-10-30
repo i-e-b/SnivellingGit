@@ -45,7 +45,7 @@
 
 
             var outp = new StringWriter();
-            WriteHtmlHeader(outp);
+            WriteHtmlHeader(outp, GitShortPath(repo.Info.Path));
 
             var status = repo.Index.RetrieveStatus();
 
@@ -75,14 +75,24 @@
             return outp.ToString();
         }
 
+        /// <summary>
+        /// Returns last two path elements, ignoring '.git' folder
+        /// </summary>
+        private string GitShortPath(string infoPath)
+        {
+            var bits = infoPath.Split('/', '\\');
+            var lim = Math.Max(0, bits.Length - 4);
+            return string.Join("/", bits.Skip(lim).Take(2));
+        }
+
         static void WriteHtmlFooter(TextWriter f)
         {
             f.Write("</body></html>");
         }
 
-        static void WriteHtmlHeader(TextWriter f)
+        static void WriteHtmlHeader(TextWriter f, string pathName)
         {
-            f.WriteLine("<html><head><title>Log</title><style>" + Styles + "</style></head><body>");
+            f.WriteLine("<html><head><title>" + pathName + " Log</title><style>" + Styles + "</style></head><body>");
         }
 
         const string Styles = @"
@@ -113,7 +123,7 @@ a, a:link, a:visited, a:hover, a:active {color: #000; text-decoration: underline
 }
 .blink { animation-name: blink; animation-duration: 1s; animation-iteration-count: infinite; }
 
-.floatBox { float: left; height: 100px; overflow-y: scroll; margin: 10px; padding: 10px; }
+.floatBox { float: left; height: 100px; min-width:20%; overflow-y: scroll; margin: 10px; padding: 10px; }
 ";
         const string SvgHeader = @"
 <svg width='{0}px' height='{1}px'>

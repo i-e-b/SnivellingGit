@@ -44,6 +44,7 @@ namespace Sg.Web
             var flags= GetFlags(settings);
             rawResponse.AddHeader("Content-Type", "text/html");
 
+            repoPath = repoPath.Replace('\\', '/'); // handle copy-and-paste from Windows paths
             var repo = ObjectFactory.GetInstance<IRepoLoader>().Load(repoPath);
             if (repo == null)
             {

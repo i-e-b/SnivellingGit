@@ -95,15 +95,13 @@
         }
 
         /// <summary>
-        /// Add a commit 
+        /// Mark a commit as 'prunable' (tracked remote has been deleted)
         /// </summary>
-        /// <param name="commitId"></param>
         public void MarkPrunable(string commitId)
         {
             if (string.IsNullOrWhiteSpace(commitId)) return;
             _prunableRefs.Add(commitId);
         }
-
 
         static void SafeAdd(IDictionary<string, List<string>> refs, string tip, string name)
         {
