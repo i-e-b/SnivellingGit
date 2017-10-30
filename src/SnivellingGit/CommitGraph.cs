@@ -117,8 +117,6 @@
         /// </summary>
         public IEnumerable<GraphCell> Cells()
         {
-            // TODO: reimplement the "SquashFlatMerges" logic here?
-
             var cellSet = _cells.OrderByDescending(c => c.CommitPoint.Date).ToArray();
             var cellLookup = _cells.ToDictionary(c => c.CommitPoint.Id);
 
