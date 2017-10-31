@@ -93,6 +93,12 @@
         static void WriteHtmlHeader(TextWriter f, string pathName)
         {
             f.WriteLine("<html><head><title>" + pathName + " Log</title><style>" + Styles + "</style></head><body>");
+            f.WriteLine(
+@"<script>function svgElementClicked(e) { 
+    if (e.id && e.id.length > 20) {
+        window.location.href = '?show='+e.id;
+    }
+}</script>");
         }
 
         const string Styles = @"
@@ -126,27 +132,32 @@ a, a:link, a:visited, a:hover, a:active {color: #000; text-decoration: underline
 .floatBox { float: left; height: 100px; min-width:20%; overflow-y: scroll; margin: 10px; padding: 10px; }
 ";
         const string SvgHeader = @"
-<svg width='{0}px' height='{1}px'>
+<svg id='svgroot' width='{0}px' height='{1}px'>
 <g transform='translate(20,20)'>
 <defs>
-    <marker id='arrow' viewBox='0 0 10 10' refX='8' refY='5' markerUnits='strokeWidth' markerWidth='8' markerHeight='5' orient='auto' style='fill: #000'>
-        <path d='M 0 0 L 10 5 L 0 10 z'></path>
-    </marker>
     <marker id='dot' viewBox='-10 -10 20 20' refX='0' refY='0' markerUnits='strokeWidth' markerWidth='10' markerHeight='10' orient='auto' style='fill: #333'>
         <circle cx='0' cy='0' r='3'></circle>
     </marker>
+	<script>
+        function sendClickToParentDocument(evt) {{
+            var target = evt.target;
+            if(target.correspondingUseElement) target = target.correspondingUseElement;
+            if (window.parent.svgElementClicked) window.parent.svgElementClicked(target);
+        }}
+		document.getElementById('svgroot').addEventListener('click', sendClickToParentDocument, false);
+    </script>
 </defs>";
         const string trackedNode =
 @"<g class='node {4}' transform='translate({0},{1})'>
-    <rect rx='5' ry='5' x='-10' y='-8' width='20' height='14' style='fill:#{3}'><title>{2}</title></rect>
+    <rect id='{5}' rx='5' ry='5' x='-10' y='-8' width='20' height='14' style='fill:#{3}'><title>{2}</title></rect>
 </g>";
         const string localNode =
 @"<g class='node {4}' transform='translate({0},{1})'>
-    <rect rx='5' ry='5' x='-10' y='-8' width='20' height='14' style='stroke:#{3}'><title>(untracked) {2}</title></rect>
+    <rect id='{5}' rx='5' ry='5' x='-10' y='-8' width='20' height='14' style='stroke:#{3}'><title>(untracked) {2}</title></rect>
 </g>";
         const string mergeNode =
 @"<g class='merge {3}' transform='translate({0},{1})'>
-    <circle cx='0' cy='0' r='7'><title>{2}</title></circle>
+    <circle id='{4}' cx='0' cy='0' r='7'><title>{2}</title></circle>
 </g>";
         const string branchTagAnnotation =
 @"<g class='tag' transform='translate({0},{1})'>
@@ -193,11 +204,11 @@ a, a:link, a:visited, a:hover, a:active {color: #000; text-decoration: underline
                 // Draw node
                 if (cell.IsMerge)
                 {
-                    sb.AppendFormat(mergeNode, cellX(cell.Column), cellY(cell.Row), title, styleClass);
+                    sb.AppendFormat(mergeNode, cellX(cell.Column), cellY(cell.Row), title, styleClass, cell.CommitPoint.Id);
                 }
                 else
                 {
-                    sb.AppendFormat(cell.LocalOnly ? localNode : trackedNode, cellX(cell.Column), cellY(cell.Row), title, cell.CommitPoint.Colour, styleClass);
+                    sb.AppendFormat(cell.LocalOnly ? localNode : trackedNode, cellX(cell.Column), cellY(cell.Row), title, cell.CommitPoint.Colour, styleClass, cell.CommitPoint.Id);
                 }
 
                 // Draw commit message
@@ -220,7 +231,6 @@ a, a:link, a:visited, a:hover, a:active {color: #000; text-decoration: underline
 
         void DrawAncestryLines(int rowLimit, ICollection<GraphCell> cells, StringBuilder sb, Func<int, int> cellX, Func<int, int> cellY)
         {
-            var odd = true;
             var loops = new LoopPlacer(cells);
             foreach (var cell in cells) // increasing row number
             {
@@ -231,13 +241,7 @@ a, a:link, a:visited, a:hover, a:active {color: #000; text-decoration: underline
                 {
                     var complex = !HideComplexHistory && AreCellsBetween(cells, cell.Column, cell.Row, child.Row);
 
-                    if (complex)
-                    {
-                        odd = !odd;
-                    }
-                    var distance = Math.Abs(child.Row - cell.Row);
-
-                    depth = ConnectCells(sb, loops, cells, child, cell, cellX, cellY, odd, complex, distance, depth);
+                    depth = ConnectCells(sb, loops, cells, child, cell, cellX, cellY, complex, depth);
                 }
             }
         }
@@ -248,29 +252,20 @@ a, a:link, a:visited, a:hover, a:active {color: #000; text-decoration: underline
         /// <summary>
         /// Draw lines between two cells. Only to be used by DrawAncestryLines
         /// </summary>
-        private int ConnectCells(StringBuilder sb, LoopPlacer loops, ICollection<GraphCell>  allCells, GraphCell child, GraphCell parent, Func<int, int> cellX, Func<int, int> cellY, bool odd, bool complex, int distance, int depth)
+        private int ConnectCells(StringBuilder sb, LoopPlacer loops, ICollection<GraphCell>  allCells, GraphCell child, GraphCell parent, Func<int, int> cellX, Func<int, int> cellY, bool complex, int depth)
         {
-            bool isLeft; int loopDepth;
-
             if (child.Column != parent.Column) // an unmerged branch
             {
                 DrawDirectBranchingLine(sb, allCells, child, parent, cellX, cellY);
             }
             else if (!complex || HideComplexHistory) // simple inheritance
             {
-                if (child.IsMerge && distance > 1 && ! HideComplexHistory) // actually complex. Show on left.
-                {
-                    loops.FindLeastDepth(parent.Column, parent.Row, child.Row, out isLeft, out loopDepth);
-                    loops.SetDepth(parent.Column, parent.Row, child.Row, isLeft, loopDepth);
-                    sb.Append(DrawLoop(left: isLeft, depth: loopDepth, x: cellX(parent.Column), y1: cellY(parent.Row), y2: cellY(child.Row)));
-                }
-                else // really simple, draw a straight line between the two
-                {
-                    sb.AppendFormat(simpleLine, cellX(parent.Column), cellY(child.Row), cellX(child.Column), cellY(parent.Row));
-                }
+                sb.AppendFormat(simpleLine, cellX(parent.Column), cellY(child.Row), cellX(child.Column), cellY(parent.Row));
             }
             else // complex inheritance, show on right
             {
+                bool isLeft;
+                int loopDepth;
                 loops.FindLeastDepth(parent.Column, parent.Row, child.Row, out isLeft, out loopDepth);
                 loops.SetDepth(parent.Column, parent.Row, child.Row, isLeft, loopDepth);
                 sb.Append(DrawLoop(left: isLeft, depth: loopDepth, x: cellX(parent.Column), y1: cellY(parent.Row), y2: cellY(child.Row)));

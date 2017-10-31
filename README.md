@@ -9,12 +9,11 @@ Remember to include a path to your target git directory (i.e. `C:\Work\MyProj` w
 ### Immediate To Do
 
 * extend log limit a bit further if branches don't line up?
-  - url flag to set log limit
+  - url flag to set log limit?
 * only show complex ancestry lines on hover / select?
 * split HTML and SVG rendering?
 
 * show common ancestor between two commits (on click, fade everything not directly connected?)
-* handle 'rebase inversion', where a younger commit is the parent of an older one (artificially shift up?)
 
 ### Goals
 

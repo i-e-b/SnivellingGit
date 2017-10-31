@@ -18,7 +18,8 @@
             return new CommitPoint(
                 commit.Sha,
                 commit.MessageShort,
-                commit.Author.When,
+                //commit.Author.When,  // if you use this, rebases stay in their original commit time
+                commit.Committer.When, // using this, cherry-picks and rebases get the time the new commit was written.
                 commit.Parents.Select(p => p.Sha).ToArray())
                 {
                     Author = commit.Author.Name,
