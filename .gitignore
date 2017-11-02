@@ -1,3 +1,5 @@
+.vs/
+*.psess
 /packages
 obj
 bin

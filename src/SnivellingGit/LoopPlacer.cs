@@ -10,6 +10,7 @@ namespace SnivellingGit
     public class LoopPlacer
     {
         readonly List<int[]> values; // colums, containing rows
+        readonly List<int> columnMaxes; // max width in entire column
 
         /// <summary>
         /// Clear values, and prepare positions for a completed commit graph
@@ -17,6 +18,7 @@ namespace SnivellingGit
         public LoopPlacer(ICollection<GraphCell> cells)
         {
             values = new List<int[]>();
+            columnMaxes = new List<int>();
             var cols = cells.GroupBy(c => c.Column);
             foreach (var col in cols)
             {
@@ -43,6 +45,7 @@ namespace SnivellingGit
         /// </summary>
         public void SetDepth(int col, int rowStart, int rowEnd, bool isLeft, int newDepth)
         {
+            columnMaxes.Clear();
             var min = Math.Min(rowStart, rowEnd);
             var max = Math.Max(rowStart, rowEnd);
             var edge = (isLeft) ? (values[col * 2]) : (values[(col * 2) + 1]);
@@ -81,6 +84,32 @@ namespace SnivellingGit
                 isLeft = false;
                 depth = rightEdge + 1;
             }
+        }
+
+        private int ColumnMax(int col)
+        {
+            if (values.Count < (col*2)+1) return 0;
+            if (columnMaxes.Count <= col) { // need to re-calculate
+                Extend(columnMaxes, values.Count / 2, 0);
+                for (int i = 0; i < values.Count / 2; i++)
+                {
+                    columnMaxes[i] = values[i*2].Max() + values[(i*2)+1].Max();
+                }
+            }
+            return columnMaxes[col];
+        }
+
+        /// <summary>
+        /// Return the width of columns from left up to this one
+        /// </summary>
+        public int CumulativeWidth(int col, int defaultCellWidth, int loopSize)
+        {
+            int cuml = 0;
+            for (int i = 0; i < col; i++)
+            {
+                cuml += ColumnMax(i) * loopSize + defaultCellWidth;
+            }
+            return cuml;
         }
     }
 }

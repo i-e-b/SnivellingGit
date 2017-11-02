@@ -47,10 +47,11 @@
             var outp = new StringWriter();
             WriteHtmlHeader(outp, GitShortPath(repo.Info.Path));
 
-            var status = repo.Index.RetrieveStatus();
+            // Retrieving status on large repos is slow -- this should get rolled out to an async call?
+            //var status = repo.Index.RetrieveStatus();
 
             outp.WriteLine("<p>Currently checked out: <span class=\"data\">" + repo.Head.CanonicalName + "</span></p>");
-
+/*
             outp.WriteLine("<div class=\"floatBox\">");
                 outp.WriteLine("<p>Working copy:<span class=\"data\"> " + status.Added.Count() + " added, " + status.Removed.Count() + " deleted, " + status.Modified.Count() + " modified; ");
                 outp.WriteLine(status.Staged.Count() + " staged for next commit.</span></p>");
@@ -58,7 +59,7 @@
                 outp.WriteLine("<p>Current interactive operation '" + repo.Info.CurrentOperation + "'</p>");
                 outp.WriteLine("<p>History contains " + HistoryWalker.SafeEnumerate(repo.Commits).Count() + " commits</p>");
             outp.WriteLine("</div>");
-
+*/
             outp.WriteLine("<div class=\"floatBox\">Branches <a href=\"?"+flags+"\">Select None</a><br/>" 
                 + string.Join("<br/>", repo.Branches.Select(b => "<a href=\"?"+flags+"&show="+b.Tip.Sha+"\">"+b.CanonicalName+"</a>"))
                 + "</div>");
@@ -173,6 +174,7 @@ a, a:link, a:visited, a:hover, a:active {color: #000; text-decoration: underline
         const int cellw = 20;
         const int cellmarginw = cellw + 10;
         const int cellh = 14;
+        const int loopSpacing = 3;
 
         void RenderCommitGraphToHtml(TextWriter f, ICommitGraph table, string hiliteSha, int rowLimit)
         {
@@ -181,17 +183,22 @@ a, a:link, a:visited, a:hover, a:active {color: #000; text-decoration: underline
             var widestLabel = cells.Select(c => GuessStringWidth(10, c.BranchNames.ToArray())).Max();
             int tagLabelMargin = widestLabel + 40;
 
-            Func<int, int> cellX = col => (col * cellmarginw) + tagLabelMargin;
+            var finalPlacement = new LoopPlacer(cells);
+            var loops = new LoopPlacer(cells);
+            Func<int, int> cellX = col => finalPlacement.CumulativeWidth(col, cellmarginw, loopSpacing) + tagLabelMargin;
             Func<int, int> cellY = row => (row * (cellh + cellMargin));
-            Func<int, int> labelX = col => col * cellmarginw;
+            Func<int, int> labelX = col => finalPlacement.CumulativeWidth(col, cellmarginw, loopSpacing);
 
-            var rightMostColumnX = cellX(cells.Select(c => c.Column).Max() + 1);
-            var rightMostNodeEdge = rightMostColumnX + 10;
-            var rightMostEdgeOfSvg = rightMostNodeEdge;
             var sb = new StringBuilder();
 
             // Draw branch lines (overdrawn by nodes)
-            DrawAncestryLines(rowLimit, cells, sb, cellX, cellY);
+            DrawAncestryLines(rowLimit, finalPlacement, cells, new StringBuilder(), cellX, cellY); // dummy run to get final positions. Maybe: separate line decisions from writing?
+            DrawAncestryLines(rowLimit, loops, cells, sb, cellX, cellY);
+
+            
+            var rightMostColumnX = cellX(cells.Select(c => c.Column).Max() + 1);
+            var rightMostNodeEdge = rightMostColumnX + 10;
+            var rightMostEdgeOfSvg = rightMostNodeEdge;
 
             foreach (var cell in cells)
             {
@@ -200,7 +207,7 @@ a, a:link, a:visited, a:hover, a:active {color: #000; text-decoration: underline
                 var styleClass = "";
                 if (cell.CommitPoint.Id == hiliteSha) styleClass += "blink ";
 
-                var title = cell.CommitPoint.Author+"\r\n"+cell.CommitPoint.Id;
+                var title = cell.CommitPoint.Author + "\r\n" + cell.CommitPoint.Id;
                 // Draw node
                 if (cell.IsMerge)
                 {
@@ -229,19 +236,17 @@ a, a:link, a:visited, a:hover, a:active {color: #000; text-decoration: underline
             f.Write("</g></svg>");
         }
 
-        void DrawAncestryLines(int rowLimit, ICollection<GraphCell> cells, StringBuilder sb, Func<int, int> cellX, Func<int, int> cellY)
+        void DrawAncestryLines(int rowLimit, LoopPlacer loops, ICollection<GraphCell> cells, StringBuilder sb, Func<int, int> cellX, Func<int, int> cellY)
         {
-            var loops = new LoopPlacer(cells);
             foreach (var cell in cells) // increasing row number
             {
                 if (rowLimit-- == 0) { break; }
 
-                var depth = 1;
                 foreach (var child in cell.ChildCells) // increasing row number
                 {
                     var complex = !HideComplexHistory && AreCellsBetween(cells, cell.Column, cell.Row, child.Row);
 
-                    depth = ConnectCells(sb, loops, cells, child, cell, cellX, cellY, complex, depth);
+                    ConnectCells(sb, loops, cells, child, cell, cellX, cellY, complex);
                 }
             }
         }
@@ -252,7 +257,7 @@ a, a:link, a:visited, a:hover, a:active {color: #000; text-decoration: underline
         /// <summary>
         /// Draw lines between two cells. Only to be used by DrawAncestryLines
         /// </summary>
-        private int ConnectCells(StringBuilder sb, LoopPlacer loops, ICollection<GraphCell>  allCells, GraphCell child, GraphCell parent, Func<int, int> cellX, Func<int, int> cellY, bool complex, int depth)
+        private void ConnectCells(StringBuilder sb, LoopPlacer loops, ICollection<GraphCell>  allCells, GraphCell child, GraphCell parent, Func<int, int> cellX, Func<int, int> cellY, bool complex)
         {
             if (child.Column != parent.Column) // an unmerged branch
             {
@@ -269,9 +274,7 @@ a, a:link, a:visited, a:hover, a:active {color: #000; text-decoration: underline
                 loops.FindLeastDepth(parent.Column, parent.Row, child.Row, out isLeft, out loopDepth);
                 loops.SetDepth(parent.Column, parent.Row, child.Row, isLeft, loopDepth);
                 sb.Append(DrawLoop(left: isLeft, depth: loopDepth, x: cellX(parent.Column), y1: cellY(parent.Row), y2: cellY(child.Row)));
-                depth++;
             }
-            return depth;
         }
 
         private void DrawDirectBranchingLine(StringBuilder sb, ICollection<GraphCell> allCells, GraphCell child, GraphCell parent, Func<int, int> cellX, Func<int, int> cellY)
@@ -337,7 +340,9 @@ a, a:link, a:visited, a:hover, a:active {color: #000; text-decoration: underline
         static string DrawLoop(bool left, int depth, int x, int y1, int y2)
         {
             var offs = (left) ? (-(cellw / 2)) : (cellw / 2);
-            var stepping = (left) ? ((-2 * depth) - 3) : ((2 * depth) + 3);
+            var limit = Math.Abs(y2 - y1) / 2; // prevent curves crossing over
+            var stepping = Math.Min(limit, (loopSpacing * depth) + loopSpacing);
+            if (left) {stepping = -stepping; }
             var upPixDepth = -Math.Abs(stepping);
             var pixDepth = stepping;
 
