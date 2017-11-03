@@ -13,9 +13,6 @@ Remember to include a path to your target git directory (i.e. `C:\Work\MyProj` w
 * only show complex ancestry lines on hover / select?
 * split HTML and SVG rendering?
 
-* show common ancestor between two commits (on click, fade everything not directly connected?)
-  - maybe do an 'exploded' view on select -- treat the selected node like it's own branch?
-
 ### Goals
 
 * Move head (checkout)

@@ -49,7 +49,7 @@ namespace SnivellingGit
             var min = Math.Min(rowStart, rowEnd);
             var max = Math.Max(rowStart, rowEnd);
             var edge = (isLeft) ? (values[col * 2]) : (values[(col * 2) + 1]);
-            for (int i = min; i <= max; i++)
+            for (int i = min; i < max; i++)
             {
                 edge[i] = newDepth;
             }

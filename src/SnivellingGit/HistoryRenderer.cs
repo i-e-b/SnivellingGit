@@ -39,7 +39,7 @@
         /// </summary>
         public string RenderRepositoryPage(IRepository repo, string flags)
         {
-            ICommitGraph table = new ColumnsCommitGraph();
+            ICommitGraph table = new ColumnsCommitGraph(CommitIdToHilight);
 
             HistoryWalker.BuildCommitGraph(repo, table, OnlyLocal, AlwaysShowMasterFirst);
 
@@ -172,7 +172,7 @@ a, a:link, a:visited, a:hover, a:active {color: #000; text-decoration: underline
 
         const int cellMargin = 4;
         const int cellw = 20;
-        const int cellmarginw = cellw + 10;
+        const int cellmarginw = cellw + 15;
         const int cellh = 14;
         const int loopSpacing = 3;
 

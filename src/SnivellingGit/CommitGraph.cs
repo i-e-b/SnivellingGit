@@ -8,6 +8,7 @@
     /// </summary>
     public class ColumnsCommitGraph: ICommitGraph
     {
+        readonly string _commitIdToHilight;
         readonly List<GraphCell> _cells = new List<GraphCell>();
         /// <summary> parent -> children </summary>
         readonly Dictionary<string, HashSet<string>> _reverseEdges = new Dictionary<string, HashSet<string>>();
@@ -22,6 +23,16 @@
         /// <summary> tip SHA -> reference names </summary>
         readonly Dictionary<string, List<string>> _refs = new Dictionary<string, List<string>>();
         readonly HashSet<string> _seenNodes = new HashSet<string>();
+
+        const string RefForSelected = "¶Selected";
+
+        /// <summary>
+        /// Prepare a new commit graph, with an optional SHA id that should be put it a 'selected' column
+        /// </summary>
+        public ColumnsCommitGraph(string commitIdToHilight)
+        {
+            _commitIdToHilight = commitIdToHilight;
+        }
 
         /// <summary>
         /// Add a commit. Must be added in child->parent->g.parent order.
@@ -53,6 +64,8 @@
 
         void AddNode(CommitPoint commit, string sourceRefName, bool tideCrossed)
         {
+            if (commit.Id == _commitIdToHilight) sourceRefName = RefForSelected;
+
             if (!_refColumns.ContainsKey(sourceRefName)) _refColumns.Add(sourceRefName, _refColumns.Count);
 
             _cells.Add(new GraphCell
