@@ -13,7 +13,7 @@
         [SetUp]
         public void setup()
         {
-            _subject = new ColumnsCommitGraph();
+            _subject = new ColumnsCommitGraph("");
             var tA = TestTime(1);
             var tB = TestTime(2);
             var tD = TestTime(3);

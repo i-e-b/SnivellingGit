@@ -10,7 +10,6 @@ Remember to include a path to your target git directory (i.e. `C:\Work\MyProj` w
 
 * extend log limit a bit further if branches don't line up?
   - url flag to set log limit?
-* only show complex ancestry lines on hover / select?
 * split HTML and SVG rendering?
 
 ### Goals
@@ -27,18 +26,18 @@ Remember to include a path to your target git directory (i.e. `C:\Work\MyProj` w
 ### Implementation details
 
 * Make a reactive SVG generator, to do the rendering and add JS to re-align things post-measurement.
-* select nodes with shift-click
+* select multiple nodes with shift-click
 * cherry-pick with ctrl-click
-* rebase with ctrl-shift-click
-* merge with context after selecting
-* squash with context after selecting
+* rebase with ctrl-shift-click (or drag-and-drop?)
+* merge with context menu after selecting
+* squash with context menu after selecting
 
 Comparison of Sg with `gitk --all`
 ----------------------------------
 Only unmerged branches are shown out-of-line. Non simple ancestry shown with arcs to the side.
 <img src="https://raw.githubusercontent.com/i-e-b/SnivellingGit/master/info/Simple%20comparison.png"/>
 
-Commits are shown in strict time order, rather than ancestry order. Node colours are based on author's name.
+Commits are shown in strict time order. Node colours are based on author's name.
 <img src="https://raw.githubusercontent.com/i-e-b/SnivellingGit/master/info/Time%20order%20vs%20ancestry%20order.png"/>
 
 ### References

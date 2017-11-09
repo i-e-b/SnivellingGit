@@ -68,12 +68,22 @@
                            + string.Join("<br/>", repo.Tags.OrderByDescending(t=>t.Name).Select(b => "<a href=\"?"+flags+"&show="+b.Target.Sha+"\">"+b.Name+"</a>"))
                            + "</div>");
 
+
+            if (HasSelectedNode()) {
+                outp.WriteLine("<a href=\"#\">Checkout selected (headless)</a>");
+            }
+
             outp.WriteLine("<div style=\"clear:both\"></div>");
 
             RenderCommitGraphToHtml(outp, table, CommitIdToHilight, rowLimit:100);
             WriteHtmlFooter(outp);
 
             return outp.ToString();
+        }
+
+        private bool HasSelectedNode()
+        {
+            return ! string.IsNullOrWhiteSpace(CommitIdToHilight);
         }
 
         /// <summary>
