@@ -27,13 +27,21 @@ namespace Sg.Unit.Tests
 
             Assert.That(actual, Is.EqualTo(expected));
         }
-        
 
         [Test]
         public void empty_tag_other_way()
         {
             var expected = "<br/>";
             var actual = T.gEmpty("br").ToString();
+
+            Assert.That(actual, Is.EqualTo(expected));
+        }
+
+        [Test]
+        public void empty_tag_a_third_way()
+        {
+            var expected = "<br/>";
+            var actual = T.g("br/").ToString();
 
             Assert.That(actual, Is.EqualTo(expected));
         }
@@ -106,7 +114,7 @@ namespace Sg.Unit.Tests
         }
 
         [Test]
-        public void tag_contents_replace_text_contents()
+        public void tag_contents_are_joined_with_text_contents()
         {
             var subject = T.g("p")["Hello"];
 
@@ -116,7 +124,7 @@ namespace Sg.Unit.Tests
             var two = subject.ToString();
 
             Assert.That(one, Is.EqualTo("<p>Hello</p>"));
-            Assert.That(two, Is.EqualTo("<p>Bingo<i>Bango</i></p>"));
+            Assert.That(two, Is.EqualTo("<p>HelloBingo<i>Bango</i></p>"));
         }
 
         [Test]
@@ -128,6 +136,19 @@ namespace Sg.Unit.Tests
             subject.Add(src.Select(s => T.g()[s]));
 
             Assert.That(subject.ToString(), Is.EqualTo("<x>abc</x>"));
+        }
+
+        [Test]
+        public void can_update_child_contents_after_wrapping_in_parent()
+        {
+            var inner = T.g("p")["Hello"];
+            var parent = T.g("div")[T.g("span")[inner]];
+
+            inner.Add(", ");
+            inner.Add("World");
+
+            var expected = "<div><span><p>Hello, World</p></span></div>";
+            Assert.That(parent.ToString(), Is.EqualTo(expected));
         }
     }
 }

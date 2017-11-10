@@ -61,13 +61,13 @@
                     T.g("p")["History contains " + HistoryWalker.SafeEnumerate(repo.Commits).Count() + " commits"]
                 ];
             body.Add(fileStatus);
-            */
+            // */
 
-            var branches = T.g("div", "class", "floatBox")["Branches ", T.g("a", "href", "?" + flags)["Select None"], T.gEmpty("br")];
+            var branches = T.g("div", "class", "floatBox")["Branches ", T.g("a", "href", "?" + flags)["Select None"], T.g("br/")];
             branches.Add(repo.Branches.Select(b=>ShaLink(flags, b.Tip.Sha, b.CanonicalName)));
             body.Add(branches);
             
-            var tags = T.g("div", "class", "floatBox")["Tags ", T.g("a", "href", "?" + flags)["Select None"], T.gEmpty("br")];
+            var tags = T.g("div", "class", "floatBox")["Tags ", T.g("a", "href", "?" + flags)["Select None"], T.g("br/")];
             tags.Add(repo.Tags.OrderByDescending(t=>t.Name).Select(b=>ShaLink(flags, b.Target.Sha, b.CanonicalName)));
             body.Add(tags);
 
@@ -88,7 +88,7 @@
 
         private TagContent ShaLink(string flags, string sha, string text)
         {
-            return T.g("a", "href", "?"+flags+"&show="+sha)[text, T.gEmpty("br")];
+            return T.g("a", "href", "?"+flags+"&show="+sha)[text, T.g("br/")];
         }
 
         private bool HasSelectedNode()

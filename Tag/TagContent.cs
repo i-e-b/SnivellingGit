@@ -138,6 +138,10 @@ namespace Tag
             IsEmpty = false;
             if (Contents == null) Contents = new List<TagContent>();
 
+            if (Text != null) {
+                Contents.Add(T.g()[Text]);
+                Text = null;
+            }
             Contents.AddRange(content);
 
             return this;

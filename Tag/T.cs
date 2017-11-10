@@ -1,4 +1,5 @@
-﻿using System.Text;
+﻿using System;
+using System.Text;
 
 namespace Tag
 {
@@ -18,10 +19,11 @@ namespace Tag
         /// <param name="properties">list alternating between property name and value</param>
         public static TagContent g(string tagName, params string[] properties)
         {
+            var empty = tagName.EndsWith("/", StringComparison.Ordinal);
             var t = new TagContent
             {
-                Tag = tagName,
-                IsEmpty = false,
+                Tag = empty ? tagName.TrimEnd('/') : tagName,
+                IsEmpty = empty,
                 Contents = null
             };
 

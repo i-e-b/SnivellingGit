@@ -11,6 +11,8 @@ Remember to include a path to your target git directory (i.e. `C:\Work\MyProj` w
 * extend log limit a bit further if branches don't line up?
   - url flag to set log limit?
 * split HTML and SVG rendering?
+* Move T.g out to  https://github.com/i-e-b/T.g and make a NuGte package when it's stable
+* Try to move the SVG generation to T.g
 
 ### Goals
 
