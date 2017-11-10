@@ -39,10 +39,10 @@ namespace Sg.Web
             return WriteMasterPage(rawResponse, repoPath, settings);
         }
 
-        private static string WriteMasterPage(HttpListenerResponse rawResponse, string repoPath, NameValueCollection settings)
+        private static string WriteMasterPage(HttpListenerResponse response, string repoPath, NameValueCollection settings)
         {
             var flags= GetFlags(settings);
-            rawResponse.AddHeader("Content-Type", "text/html");
+            response.AddHeader("Content-Type", "text/html");
 
             repoPath = repoPath.Replace('\\', '/'); // handle copy-and-paste from Windows paths
             var repo = ObjectFactory.GetInstance<IRepoLoader>().Load(repoPath);
@@ -59,7 +59,9 @@ namespace Sg.Web
 
             renderer.CommitIdToHilight = settings["show"];
 
-            return renderer.RenderRepositoryPage(repo, string.Join(",",flags));
+            renderer.RenderRepositoryPage(response.OutputStream, repo, string.Join(",",flags));
+
+            return null;
         }
 
         private static string NoSuchRepoPage(string repoPath)

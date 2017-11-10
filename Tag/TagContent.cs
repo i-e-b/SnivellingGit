@@ -1,5 +1,7 @@
+using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Text;
 
 namespace Tag
 {
@@ -39,9 +41,11 @@ namespace Tag
         /// </summary>
         public override string ToString()
         {
-            var sb = new StringWriter();
-            StreamTo(sb);
-            return sb.ToString();
+            using (var sb = new StringWriter())
+            {
+                StreamTo(sb);
+                return sb.ToString();
+            }
         }
 
         /// <summary>
@@ -89,6 +93,20 @@ namespace Tag
                 tw.Write(">");
             }
         }
+
+        
+        /// <summary>
+        /// Stream to a byte stream with a given encoding.
+        /// </summary>
+        public void StreamTo(Stream outp, Encoding textEncoding)
+        {
+            using (var tw = new StreamWriter(outp, textEncoding))
+            {
+                StreamTo(tw);
+                tw.Flush();
+            }
+        }
+
 
         /// <summary>
         /// Mark this as an empty tag. Will render as &lt;Tag/&gt; instead of &lt;Tag&gt;&lt;/Tag&gt;

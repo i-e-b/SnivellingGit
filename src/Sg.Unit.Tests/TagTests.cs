@@ -1,5 +1,6 @@
 ﻿using System.IO;
 using System.Linq;
+using System.Text;
 
 namespace Sg.Unit.Tests
 {
@@ -79,7 +80,7 @@ namespace Sg.Unit.Tests
         }
 
         [Test]
-        public void stream_to_a_text_writer() {
+        public void write_to_a_text_writer() {
             var expected = "<div>1<p>2</p>3</div>";
 
             var outp = new StringWriter();
@@ -88,6 +89,20 @@ namespace Sg.Unit.Tests
             subject.StreamTo(outp);
 
             Assert.That(outp.ToString(), Is.EqualTo(expected));
+        }
+
+        [Test]
+        public void write_to_a_byte_stream(){
+            var expected = "<div>1<p>2</p>3</div>";
+
+            var outp = new MemoryStream();
+            var subject = T.g("div")[ "1", T.g("p")["2"], "3" ];
+
+            subject.StreamTo(outp, Encoding.ASCII);
+            var rawData = outp.ToArray();
+
+            var result = Encoding.ASCII.GetString(rawData);
+            Assert.That(result, Is.EqualTo(expected));
         }
 
         [Test]

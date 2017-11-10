@@ -1,4 +1,6 @@
-﻿namespace SnivellingGit
+﻿using System.IO;
+
+namespace SnivellingGit
 {
     using LibGit2Sharp;
 
@@ -8,9 +10,9 @@
     public interface IHistoryRenderer
     {
         /// <summary>
-        /// RenderRepositoryPage a repository view from the given directory (should be a git root path or .git directory)
+        /// Render a repository view from the given directory into a data stream.
         /// </summary>
-        string RenderRepositoryPage(IRepository repo, string flags);
+        void RenderRepositoryPage(Stream outputStream, IRepository repo, string flags);
 
         /// <summary>
         /// Default false. If true, try to show a branch named 'Master' before all others, including 'HEAD'.

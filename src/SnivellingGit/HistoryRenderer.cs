@@ -39,7 +39,7 @@ namespace SnivellingGit
         /// Render a complete HTML page, containing status, controls and an SVG visualisation of the history.
         /// TODO: split this up a bit more!
         /// </summary>
-        public string RenderRepositoryPage(IRepository repo, string flags)
+        public void RenderRepositoryPage(Stream output, IRepository repo, string flags)
         {
             ICommitGraph table = new ColumnsCommitGraph(CommitIdToHilight);
 
@@ -83,7 +83,7 @@ namespace SnivellingGit
 
             body.Add(svg.ToString());
 
-            return doc.ToString();
+            doc.StreamTo(output, Encoding.UTF8);
         }
 
         private TagContent ShaLink(string flags, string sha, string text)
