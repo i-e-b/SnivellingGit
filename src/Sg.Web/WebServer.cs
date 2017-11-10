@@ -49,6 +49,7 @@
         {
             try
             {
+                ctx.Response.SendChunked = true; // Cheat: we don't have to set a content-length.
                 var rstr = _responderMethod(ctx.Request, ctx.Response);
                 if (rstr != null)
                 {

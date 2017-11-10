@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+﻿using System.Text;
 
 namespace Tag
 {
@@ -22,14 +22,22 @@ namespace Tag
             {
                 Tag = tagName,
                 IsEmpty = false,
-                Contents = null,
-                Properties = new Dictionary<string, string>()
+                Contents = null
             };
 
             var limit = properties.Length - (properties.Length % 2);
-            for (int i = 0; i < limit; i += 2)
+            if (limit > 0)
             {
-                t.Properties.Add(properties[i], properties[i + 1]);
+                var sb = new StringBuilder();
+                for (int i = 0; i < limit; i += 2)
+                {
+                    sb.Append(' ');
+                    sb.Append(properties[i]);
+                    sb.Append("=\"");
+                    sb.Append(properties[i + 1]);
+                    sb.Append("\"");
+                }
+                t.Properties = sb.ToString();
             }
 
             return t;

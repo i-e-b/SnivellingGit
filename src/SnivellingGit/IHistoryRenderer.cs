@@ -5,7 +5,7 @@ namespace SnivellingGit
     using LibGit2Sharp;
 
     /// <summary>
-    /// Entry point to the sg command line
+    /// HTML page renderer for the main graph and status
     /// </summary>
     public interface IHistoryRenderer
     {

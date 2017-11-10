@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
@@ -32,9 +31,9 @@ namespace Tag
         public bool IsEmpty { get; set; }
 
         /// <summary>
-        /// List of property names and values
+        /// Rendered property names and values
         /// </summary>
-        public Dictionary<string, string> Properties { get; set; }
+        public string Properties { get; set; }
 
         /// <summary>
         /// Render this tag and its contents as a HTML/XML string
@@ -55,16 +54,9 @@ namespace Tag
         {
             if (Tag != null)
             {
-                tw.Write("<");
+                tw.Write('<');
                 tw.Write(Tag);
-                foreach (var property in Properties)
-                {
-                    tw.Write(" ");
-                    tw.Write(property.Key);
-                    tw.Write("=\"");
-                    tw.Write(property.Value);
-                    tw.Write("\"");
-                }
+                if (Properties != null) tw.Write(Properties);
 
                 if (IsEmpty)
                 {
@@ -72,7 +64,7 @@ namespace Tag
                     return;
                 }
 
-                tw.Write(">");
+                tw.Write('>');
             }
             if (Contents != null)
             {
@@ -90,7 +82,7 @@ namespace Tag
             {
                 tw.Write("</");
                 tw.Write(Tag);
-                tw.Write(">");
+                tw.Write('>');
             }
         }
 

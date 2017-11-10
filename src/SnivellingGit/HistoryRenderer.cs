@@ -1,6 +1,4 @@
-﻿using Tag;
-
-namespace SnivellingGit
+﻿namespace SnivellingGit
 {
     using System;
     using System.Collections.Generic;
@@ -8,6 +6,7 @@ namespace SnivellingGit
     using System.Linq;
     using System.Text;
     using LibGit2Sharp;
+    using Tag;
 
     /// <summary>
     /// RenderRepositoryPage an SVG from a git repository
@@ -51,17 +50,18 @@ namespace SnivellingGit
             body.Add(T.g("p")["Currently checked out: ", T.g("span", "class","data")[repo.Head.CanonicalName]]);
 
             // Retrieving status on large repos is slow -- this should get rolled out to an async call?
-            //var status = repo.Index.RetrieveStatus();
             /*
-                        outp.WriteLine("<div class=\"floatBox\">");
-                            outp.WriteLine("<p>Working copy:<span class=\"data\"> " + status.Added.Count() + " added, " + status.Removed.Count() + " deleted, " + status.Modified.Count() + " modified; ");
-                            outp.WriteLine(status.Staged.Count() + " staged for next commit.</span></p>");
-
-                            outp.WriteLine("<p>Current interactive operation '" + repo.Info.CurrentOperation + "'</p>");
-                            outp.WriteLine("<p>History contains " + HistoryWalker.SafeEnumerate(repo.Commits).Count() + " commits</p>");
-                        outp.WriteLine("</div>");
+            var status = repo.Index.RetrieveStatus();
+            var fileStatus = T.g("div", "class", "floatBox")
+                [
+                    T.g("p")[
+                        "Working copy: ", T.g("span", "class", "data")[status.Added.Count() + " added, " + status.Removed.Count() + " deleted, " + status.Modified.Count() + " modified; " + status.Staged.Count() + " staged for next commit."]
+                    ],
+                    T.g("p")["Current interactive operation '" + repo.Info.CurrentOperation + "'"],
+                    T.g("p")["History contains " + HistoryWalker.SafeEnumerate(repo.Commits).Count() + " commits"]
+                ];
+            body.Add(fileStatus);
             */
-
 
             var branches = T.g("div", "class", "floatBox")["Branches ", T.g("a", "href", "?" + flags)["Select None"], T.gEmpty("br")];
             branches.Add(repo.Branches.Select(b=>ShaLink(flags, b.Tip.Sha, b.CanonicalName)));
@@ -79,7 +79,7 @@ namespace SnivellingGit
             body.Add(T.g("div", "style","clear:both"));
             
             var svg = new StringWriter();
-            RenderCommitGraphToHtml(svg, table, CommitIdToHilight, rowLimit:1000);
+            RenderCommitGraphToHtml(svg, table, CommitIdToHilight, rowLimit:500);
 
             body.Add(svg.ToString());
 
@@ -294,9 +294,7 @@ a, a:link, a:visited, a:hover, a:active {color: #000; text-decoration: underline
             }
             else // complex inheritance, show on right
             {
-                bool isLeft;
-                int loopDepth;
-                loops.FindLeastDepth(parent.Column, parent.Row, child.Row, out isLeft, out loopDepth);
+                loops.FindLeastDepth(parent.Column, parent.Row, child.Row, out var isLeft, out var loopDepth);
                 loops.SetDepth(parent.Column, parent.Row, child.Row, isLeft, loopDepth);
                 sb.Append(DrawLoop(left: isLeft, depth: loopDepth, x: cellX(parent.Column), y1: cellY(parent.Row), y2: cellY(child.Row)));
             }
