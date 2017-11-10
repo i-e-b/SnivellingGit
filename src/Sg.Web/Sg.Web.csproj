@@ -61,6 +61,10 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\..\Tag\Tag.csproj">
+      <Project>{fe6083a6-5377-4168-b528-a9379420ea11}</Project>
+      <Name>Tag</Name>
+    </ProjectReference>
     <ProjectReference Include="..\SnivellingGit\SnivellingGit.csproj">
       <Project>{D251ACD4-2424-4B0D-B443-F06517233150}</Project>
       <Name>SnivellingGit</Name>

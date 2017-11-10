@@ -1,6 +1,5 @@
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+using System.IO;
 
 namespace Tag
 {
@@ -18,7 +17,12 @@ namespace Tag
         /// <summary>
         /// Contents of the tag, including all sub-tags
         /// </summary>
-        public string Contents { get; set; }
+        public List<TagContent> Contents { get; set; }
+
+        /// <summary>
+        /// Raw text content of this tag, used only if `Contents` is empty
+        /// </summary>
+        public string Text { get; set; }
 
         /// <summary>
         /// If true, the tag is rendered as an empty tag, and content are not rendered even if they are supplied.
@@ -35,37 +39,55 @@ namespace Tag
         /// </summary>
         public override string ToString()
         {
-            var sb = new StringBuilder();
+            var sb = new StringWriter();
+            StreamTo(sb);
+            return sb.ToString();
+        }
+
+        /// <summary>
+        /// Stream to a text writer.
+        /// </summary><remarks>Saves some string generation over multiple 'ToString' calls?</remarks>
+        public void StreamTo(TextWriter tw)
+        {
             if (Tag != null)
             {
-                sb.Append("<");
-                sb.Append(Tag);
+                tw.Write("<");
+                tw.Write(Tag);
                 foreach (var property in Properties)
                 {
-                    sb.Append(" ");
-                    sb.Append(property.Key);
-                    sb.Append("=\"");
-                    sb.Append(property.Value);
-                    sb.Append("\"");
+                    tw.Write(" ");
+                    tw.Write(property.Key);
+                    tw.Write("=\"");
+                    tw.Write(property.Value);
+                    tw.Write("\"");
                 }
 
                 if (IsEmpty)
                 {
-                    sb.Append("/>");
-                    return sb.ToString();
+                    tw.Write("/>");
+                    return;
                 }
 
-                sb.Append(">");
+                tw.Write(">");
             }
-            sb.Append(Contents ?? "");
+            if (Contents != null)
+            {
+                foreach (var tag in Contents)
+                {
+                    tw.Write(tag);
+                }
+            }
+            else if (Text != null)
+            {
+                tw.Write(Text);
+            }
 
             if (Tag != null)
             {
-                sb.Append("</");
-                sb.Append(Tag);
-                sb.Append(">");
+                tw.Write("</");
+                tw.Write(Tag);
+                tw.Write(">");
             }
-            return sb.ToString();
         }
 
         /// <summary>
@@ -83,38 +105,53 @@ namespace Tag
         public static implicit operator string(TagContent t) => t.ToString();
 
         /// <summary>
-        /// Supply the contents of the tag. These will not be rendered if `IsEmpty` is true
+        /// Implicitly convert a string to a content-only tag
         /// </summary>
-        public TagContent Fill(string content)
-        {
-            IsEmpty = false;
-            Contents = content;
-            return this;
-        }
-        
-        /// <summary>
-        /// Supply the contents of the tag. These will not be rendered if `IsEmpty` is true
-        /// </summary>
-        public TagContent Fill(params TagContent[] content)
-        {
-            if (content == null) return this;
-            return Fill(string.Join("", content.Select(t=>t.ToString())));
+        public static implicit operator TagContent(string s) {
+            return T.g()[s];
         }
 
         /// <summary>
-        /// Supply the contents of the tag. These will not be rendered if `IsEmpty` is true
+        /// Supply the contents of the tag. These will not be rendered if `IsEmpty` is true.
+        /// Additional tags will be added after existing ones.
+        /// </summary>
+        public TagContent Add(params TagContent[] content)
+        {
+            Add((IEnumerable<TagContent>)content);
+            return this;
+        }
+
+        public TagContent Add(IEnumerable<TagContent> content)
+        {
+            if (content == null) return this;
+
+            IsEmpty = false;
+            if (Contents == null) Contents = new List<TagContent>();
+
+            Contents.AddRange(content);
+
+            return this;
+        }
+
+        /// <summary>
+        /// Supply the contents of the tag. These will not be rendered if `IsEmpty` is true.
+        /// Additional tags will be added after existing ones.
         /// </summary>
         public TagContent this[params TagContent[] content]
         {
-            get { return Fill(content); }
+            get { return Add(content); }
         }
         
         /// <summary>
-        /// Supply the contents of the tag. These will not be rendered if `IsEmpty` is true
+        /// Supply the text contents of the tag. These will not be rendered if `IsEmpty` is true or if child tags are added.
         /// </summary>
         public TagContent this[string content]
         {
-            get { return Fill(content); }
+            get
+            {
+                Text = content;
+                return this;
+            }
         }
     }
 }

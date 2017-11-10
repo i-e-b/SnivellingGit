@@ -113,6 +113,12 @@
       <Install>false</Install>
     </BootstrapperPackage>
   </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\Tag\Tag.csproj">
+      <Project>{FE6083A6-5377-4168-B528-A9379420EA11}</Project>
+      <Name>Tag</Name>
+    </ProjectReference>
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
     <PostBuildEvent>

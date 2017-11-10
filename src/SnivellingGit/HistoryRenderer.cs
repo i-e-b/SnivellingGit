@@ -1,4 +1,6 @@
-﻿namespace SnivellingGit
+﻿using Tag;
+
+namespace SnivellingGit
 {
     using System;
     using System.Collections.Generic;
@@ -44,41 +46,49 @@
             HistoryWalker.BuildCommitGraph(repo, table, OnlyLocal, AlwaysShowMasterFirst);
 
 
-            var outp = new StringWriter();
-            WriteHtmlHeader(outp, GitShortPath(repo.Info.Path));
+            var doc = WriteHtmlHeader(GitShortPath(repo.Info.Path), out var body);
+
+            body.Add(T.g("p")["Currently checked out: ", T.g("span", "class","data")[repo.Head.CanonicalName]]);
 
             // Retrieving status on large repos is slow -- this should get rolled out to an async call?
             //var status = repo.Index.RetrieveStatus();
+            /*
+                        outp.WriteLine("<div class=\"floatBox\">");
+                            outp.WriteLine("<p>Working copy:<span class=\"data\"> " + status.Added.Count() + " added, " + status.Removed.Count() + " deleted, " + status.Modified.Count() + " modified; ");
+                            outp.WriteLine(status.Staged.Count() + " staged for next commit.</span></p>");
 
-            outp.WriteLine("<p>Currently checked out: <span class=\"data\">" + repo.Head.CanonicalName + "</span></p>");
-/*
-            outp.WriteLine("<div class=\"floatBox\">");
-                outp.WriteLine("<p>Working copy:<span class=\"data\"> " + status.Added.Count() + " added, " + status.Removed.Count() + " deleted, " + status.Modified.Count() + " modified; ");
-                outp.WriteLine(status.Staged.Count() + " staged for next commit.</span></p>");
+                            outp.WriteLine("<p>Current interactive operation '" + repo.Info.CurrentOperation + "'</p>");
+                            outp.WriteLine("<p>History contains " + HistoryWalker.SafeEnumerate(repo.Commits).Count() + " commits</p>");
+                        outp.WriteLine("</div>");
+            */
 
-                outp.WriteLine("<p>Current interactive operation '" + repo.Info.CurrentOperation + "'</p>");
-                outp.WriteLine("<p>History contains " + HistoryWalker.SafeEnumerate(repo.Commits).Count() + " commits</p>");
-            outp.WriteLine("</div>");
-*/
-            outp.WriteLine("<div class=\"floatBox\">Branches <a href=\"?"+flags+"\">Select None</a><br/>" 
-                + string.Join("<br/>", repo.Branches.Select(b => "<a href=\"?"+flags+"&show="+b.Tip.Sha+"\">"+b.CanonicalName+"</a>"))
-                + "</div>");
 
-            outp.WriteLine("<div class=\"floatBox\">Tags <a href=\"?"+flags+"\">Select None</a><br/>" 
-                           + string.Join("<br/>", repo.Tags.OrderByDescending(t=>t.Name).Select(b => "<a href=\"?"+flags+"&show="+b.Target.Sha+"\">"+b.Name+"</a>"))
-                           + "</div>");
+            var branches = T.g("div", "class", "floatBox")["Branches ", T.g("a", "href", "?" + flags)["Select None"], T.gEmpty("br")];
+            branches.Add(repo.Branches.Select(b=>ShaLink(flags, b.Tip.Sha, b.CanonicalName)));
+            body.Add(branches);
+            
+            var tags = T.g("div", "class", "floatBox")["Tags ", T.g("a", "href", "?" + flags)["Select None"], T.gEmpty("br")];
+            tags.Add(repo.Tags.OrderByDescending(t=>t.Name).Select(b=>ShaLink(flags, b.Target.Sha, b.CanonicalName)));
+            body.Add(tags);
 
 
             if (HasSelectedNode()) {
-                outp.WriteLine("<a href=\"#\">Checkout selected (headless)</a>");
+                body.Add(T.g("a","href","#")["Checkout selected (headless)"]);
             }
 
-            outp.WriteLine("<div style=\"clear:both\"></div>");
+            body.Add(T.g("div", "style","clear:both"));
+            
+            var svg = new StringWriter();
+            RenderCommitGraphToHtml(svg, table, CommitIdToHilight, rowLimit:1000);
 
-            RenderCommitGraphToHtml(outp, table, CommitIdToHilight, rowLimit:100);
-            WriteHtmlFooter(outp);
+            body.Add(svg.ToString());
 
-            return outp.ToString();
+            return doc.ToString();
+        }
+
+        private TagContent ShaLink(string flags, string sha, string text)
+        {
+            return T.g("a", "href", "?"+flags+"&show="+sha)[text, T.gEmpty("br")];
         }
 
         private bool HasSelectedNode()
@@ -96,22 +106,27 @@
             return string.Join("/", bits.Skip(lim).Take(2));
         }
 
-        static void WriteHtmlFooter(TextWriter f)
+        static TagContent WriteHtmlHeader(string pathName, out TagContent body)
         {
-            f.Write("</body></html>");
+            var html =
+                T.g("html")[
+                    T.g("head")[
+                            T.g("title")[pathName + " Log"],
+                            T.g("style")[Styles]
+                        ]
+                    ];
+            body = T.g("body")[T.g("script")[ClickScript]];
+            html.Add(body);
+
+            return html;
         }
 
-        static void WriteHtmlHeader(TextWriter f, string pathName)
-        {
-            f.WriteLine("<html><head><title>" + pathName + " Log</title><style>" + Styles + "</style></head><body>");
-            f.WriteLine(
-@"<script>function svgElementClicked(e) { 
+        const string ClickScript = @"
+function svgElementClicked(e) { 
     if (e.id && e.id.length > 20) {
         window.location.href = '?show='+e.id;
     }
-}</script>");
-        }
-
+}";
         const string Styles = @"
 .flat {margin-left:10px;width:4px;height:4px;background:#aaa;}
 .fullMerge {margin-left:8px;width:10px;height:10px;background:#ccc;border-radius:5px;-moz-border-radius:5px;-webkit-border-radius:5px;}

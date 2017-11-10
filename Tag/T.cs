@@ -22,6 +22,7 @@ namespace Tag
             {
                 Tag = tagName,
                 IsEmpty = false,
+                Contents = null,
                 Properties = new Dictionary<string, string>()
             };
 
