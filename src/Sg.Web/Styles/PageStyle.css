@@ -1,0 +1,28 @@
+﻿.flat {margin-left:10px;width:4px;height:4px;background:#aaa;}
+.fullMerge {margin-left:8px;width:10px;height:10px;background:#ccc;border-radius:5px;-moz-border-radius:5px;-webkit-border-radius:5px;}
+.commit {width:24px;height:16px;border-radius:5px;-moz-border-radius:5px;-webkit-border-radius:5px;}
+.line {border-left: 2px solid #aaa;height: 16px;margin-left: 11px;margin-right: 11px;}
+
+.prune { fill:#f00; }
+.headCell { fill:#5b5; }
+.tag path { stroke: #333; stroke-width: 1px; fill: none; opacity: 0.5; }
+.cmplx path { stroke: #000; stroke-width: 1px; fill: none;  opacity: 0.2;}
+.link path { stroke: #aaa; stroke-width: 1px; fill: none;  opacity: 1;}
+path:hover { stroke: #000; stroke-width: 2px; fill: none;  opacity: 1;}
+path { stroke: #aaa; stroke-width: 1px; fill: none; }
+#arrow path { stroke: #000; stroke-width: 1px; fill: #000; }
+svg{border:none;overflow:visible}
+text { font-weight: 300; font-family: Helvetica, Arial, sans-serf; font-size: 10px; }
+.node rect { stroke-width: 2px; stroke: #333; fill: #fff; opacity: 1;}
+.merge circle { stroke-width: 2px; stroke: #bbb; fill: #fff; opacity: 1;}
+
+.data {font-family: monospace; font-size:10px;}
+p {font-size:12px;}
+a, a:link, a:visited, a:hover, a:active {color: #000; text-decoration: underline; font-family: monospace; font-size:11px;}
+@keyframes blink {
+    0%  { opacity:1.0 }
+    50% { opacity:0.4 }
+}
+.blink { animation-name: blink; animation-duration: 1s; animation-iteration-count: infinite; }
+
+.floatBox { float: left; height: 100px; min-width:20%; overflow-y: scroll; margin: 10px; padding: 10px; }

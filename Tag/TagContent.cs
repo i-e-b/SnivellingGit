@@ -40,7 +40,7 @@ namespace Tag
         /// </summary>
         public override string ToString()
         {
-            using (var sb = new StringWriter())
+            using (var sb = new StringWriter(new StringBuilder(4096)))
             {
                 StreamTo(sb);
                 return sb.ToString();
@@ -92,7 +92,7 @@ namespace Tag
         /// </summary>
         public void StreamTo(Stream outp, Encoding textEncoding)
         {
-            using (var tw = new StreamWriter(outp, textEncoding))
+            using (var tw = new StreamWriter(outp, textEncoding, 4096, true))
             {
                 StreamTo(tw);
                 tw.Flush();
@@ -166,6 +166,35 @@ namespace Tag
                 Text = content;
                 return this;
             }
+        }
+
+        /// <summary>
+        /// Attempt to load a file as the tag's text content.
+        /// </summary>
+        public TagContent LoadFile(string filePath)
+        {
+            Text = File.ReadAllText(filePath); // could try storing the file and streaming out at render time?
+            return this;
+        }
+
+        /// <summary>
+        /// Reset the properties string using an array alternating between key and value
+        /// </summary>
+        public void SerialiseProperties(string[] properties)
+        {
+            var limit = properties.Length - (properties.Length % 2);
+            if (limit <= 0) return;
+
+            var sb = new StringBuilder();
+            for (int i = 0; i < limit; i += 2)
+            {
+                sb.Append(' ');
+                sb.Append(properties[i]);
+                sb.Append("=\"");
+                sb.Append(properties[i + 1]);
+                sb.Append("\"");
+            }
+            Properties = sb.ToString();
         }
     }
 }

@@ -91,6 +91,7 @@
     <Compile Include="SnivellingGit.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="RepoLoader.cs" />
+    <Compile Include="SvgRenderer.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />

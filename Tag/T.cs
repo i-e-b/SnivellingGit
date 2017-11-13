@@ -9,7 +9,7 @@ namespace Tag
     public static class T
     {
 #pragma warning disable IDE1006 // Naming Styles
-        // ReSharper disable InconsistentNaming
+// ReSharper disable InconsistentNaming
 
         /// <summary>
         /// Create a new tag.
@@ -27,20 +27,7 @@ namespace Tag
                 Contents = null
             };
 
-            var limit = properties.Length - (properties.Length % 2);
-            if (limit > 0)
-            {
-                var sb = new StringBuilder();
-                for (int i = 0; i < limit; i += 2)
-                {
-                    sb.Append(' ');
-                    sb.Append(properties[i]);
-                    sb.Append("=\"");
-                    sb.Append(properties[i + 1]);
-                    sb.Append("\"");
-                }
-                t.Properties = sb.ToString();
-            }
+            t.SerialiseProperties(properties);
 
             return t;
         }

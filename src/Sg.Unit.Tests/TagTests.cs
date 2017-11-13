@@ -150,5 +150,14 @@ namespace Sg.Unit.Tests
             var expected = "<div><span><p>Hello, World</p></span></div>";
             Assert.That(parent.ToString(), Is.EqualTo(expected));
         }
+
+        [Test]
+        public void can_load_a_file_as_tag_content() {
+            var expected = "<p>This is a sample content file <i>with</i> tags.</p>"; //make sure this is the same as the sample file
+
+            var subject = T.g("p").LoadFile("SampleFile.txt");
+
+            Assert.That(subject.ToString(), Is.EqualTo(expected));
+        }
     }
 }
