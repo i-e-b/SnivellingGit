@@ -10,7 +10,7 @@ namespace SnivellingGit
     /// </summary>
     public class SnivellingGit
     {
-        static void Main(string[] args)
+        static void Main()
         {
             Configure();
             Run();
@@ -19,7 +19,8 @@ namespace SnivellingGit
         static void Run()
         {
             var repo = ObjectFactory.GetInstance<IRepoLoader>().Load("/Work/MyGoCompare");
-            ObjectFactory.GetInstance<IHistoryRenderer>().RenderRepositoryPage(Console.OpenStandardOutput(), repo, "");
+            var html = ObjectFactory.GetInstance<IHistoryRenderer>().RenderRepositoryPage(repo, "");
+            Console.WriteLine(html);
         }
 
         /// <summary>

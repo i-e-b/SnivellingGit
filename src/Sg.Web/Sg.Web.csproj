@@ -50,6 +50,9 @@
     <Reference Include="System.IO.Abstractions">
       <HintPath>..\..\packages\System.IO.Abstractions.1.4.0.86\lib\net35\System.IO.Abstractions.dll</HintPath>
     </Reference>
+    <Reference Include="Tag, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\Tag.1.0.0\lib\net462\Tag.dll</HintPath>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="SgWebSelfhost.cs" />
@@ -61,10 +64,6 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\Tag\Tag.csproj">
-      <Project>{fe6083a6-5377-4168-b528-a9379420ea11}</Project>
-      <Name>Tag</Name>
-    </ProjectReference>
     <ProjectReference Include="..\SnivellingGit\SnivellingGit.csproj">
       <Project>{D251ACD4-2424-4B0D-B443-F06517233150}</Project>
       <Name>SnivellingGit</Name>

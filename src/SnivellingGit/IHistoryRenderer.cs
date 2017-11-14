@@ -1,4 +1,4 @@
-﻿using System.IO;
+﻿using Tag;
 
 namespace SnivellingGit
 {
@@ -10,9 +10,9 @@ namespace SnivellingGit
     public interface IHistoryRenderer
     {
         /// <summary>
-        /// Render a repository view from the given directory into a data stream.
+        /// Render a repository view from the given directory into a HTML document
         /// </summary>
-        void RenderRepositoryPage(Stream outputStream, IRepository repo, string flags);
+        TagContent RenderRepositoryPage(IRepository repo, string flags);
 
         /// <summary>
         /// Default false. If true, try to show a branch named 'Master' before all others, including 'HEAD'.

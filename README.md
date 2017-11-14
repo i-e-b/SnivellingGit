@@ -9,8 +9,10 @@ Remember to include a path to your target git directory (i.e. `C:\Work\MyProj` w
 ### Immediate To Do
 
 * extend log limit a bit further if branches don't line up?
-  - url flag to set log limit?
-* Move T.g out to  https://github.com/i-e-b/T.g and make a NuGte package when it's stable
+  - url flag to set log limit? Add a 'load more link
+* Is Sg holding a lock on directories?
+* Keep scroll position between page refresh?
+  - Load SVG over AJAX?
 
 ### Goals
 
@@ -19,13 +21,12 @@ Remember to include a path to your target git directory (i.e. `C:\Work\MyProj` w
 * fetch ; merge (probably best as separate?)
 * stashes -- both loose on a shelf, and as 'fake commits' to allow moving head without losing work (stage and index as needed, with coded stash names?)
 * show / hide unmerged remote branches (plus fetch all)
-* Change visualisation settings
-* flattened history by default (only unmerged branches spread out); Ancestry trace for indiviual commits (like gitk does); Per contributor display (column per person).
+* Change visualisation settings:
+  - flattened history by default (only unmerged branches spread out, how it is now); Ancestry trace for indiviual commits (like gitk does); Per contributor display (column per person).
 * option to attribute-tag the last commit before a merge to show branch history?
 
 ### Implementation details
 
-* Make a reactive SVG generator, to do the rendering and add JS to re-align things post-measurement.
 * select multiple nodes with shift-click
 * cherry-pick with ctrl-click
 * rebase with ctrl-shift-click (or drag-and-drop?)

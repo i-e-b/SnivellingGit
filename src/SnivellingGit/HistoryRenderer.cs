@@ -36,7 +36,7 @@
         /// <summary>
         /// Render a complete HTML page, containing status, controls and an SVG visualisation of the history.
         /// </summary>
-        public void RenderRepositoryPage(Stream output, IRepository repo, string flags)
+        public TagContent RenderRepositoryPage(IRepository repo, string flags)
         {
             ICommitGraph table = new ColumnsCommitGraph(CommitIdToHilight);
 
@@ -69,17 +69,19 @@
             tags.Add(repo.Tags.OrderByDescending(t=>t.Name).Select(b=>ShaLink(flags, b.Target.Sha, b.CanonicalName)));
             body.Add(tags);
 
-
+            var controls = T.g("div", "class","floatBox");
             if (HasSelectedNode()) {
-                body.Add(T.g("a","href","#")["Checkout selected (headless)"]);
+                controls.Add(T.g("a","href","#")["Checkout selected (headless)", T.g("br/")]);
             }
+            controls.Add(T.g("a", "href","!fetch-all")["Fetch all and prune", T.g("br/")]);
 
+            body.Add(controls);
             body.Add(T.g("div", "style","clear:both"));
 
             var svgRenderer = new SvgRenderer { HideComplexHistory = HideComplexHistory };
             body.Add(svgRenderer.RenderCommitGraphToSvg(table, CommitIdToHilight, rowLimit:500));
 
-            doc.StreamTo(output, Encoding.UTF8);
+            return doc;
         }
 
         private TagContent ShaLink(string flags, string sha, string text)

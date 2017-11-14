@@ -59,7 +59,8 @@ namespace Sg.Web
 
             renderer.CommitIdToHilight = settings["show"];
 
-            renderer.RenderRepositoryPage(response.OutputStream, repo, string.Join(",",flags));
+            var html = renderer.RenderRepositoryPage(repo, string.Join(",",flags));
+            html.StreamTo(response.OutputStream, Encoding.UTF8);
 
             return null;
         }

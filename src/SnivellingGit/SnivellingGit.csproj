@@ -77,6 +77,9 @@
     <Reference Include="System.IO.Abstractions">
       <HintPath>..\..\packages\System.IO.Abstractions.1.4.0.86\lib\net35\System.IO.Abstractions.dll</HintPath>
     </Reference>
+    <Reference Include="Tag, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\Tag.1.0.0\lib\net462\Tag.dll</HintPath>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="CommitGraph.cs" />
@@ -113,12 +116,6 @@
       <ProductName>.NET Framework 3.5 SP1</ProductName>
       <Install>false</Install>
     </BootstrapperPackage>
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\..\Tag\Tag.csproj">
-      <Project>{FE6083A6-5377-4168-B528-A9379420EA11}</Project>
-      <Name>Tag</Name>
-    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
