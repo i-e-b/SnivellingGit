@@ -18,9 +18,11 @@ namespace SnivellingGit
 
         static void Run()
         {
-            var repo = ObjectFactory.GetInstance<IRepoLoader>().Load("/Work/MyGoCompare");
-            var html = ObjectFactory.GetInstance<IHistoryRenderer>().RenderRepositoryPage(repo, "");
-            Console.WriteLine(html);
+            using (var repo = ObjectFactory.GetInstance<IRepoLoader>().Load("."))
+            {
+                var html = ObjectFactory.GetInstance<IHistoryRenderer>().RenderRepositoryPage(repo, "");
+                Console.WriteLine(html);
+            }
         }
 
         /// <summary>

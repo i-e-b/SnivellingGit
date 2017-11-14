@@ -45,24 +45,26 @@ namespace Sg.Web
             response.AddHeader("Content-Type", "text/html");
 
             repoPath = repoPath.Replace('\\', '/'); // handle copy-and-paste from Windows paths
-            var repo = ObjectFactory.GetInstance<IRepoLoader>().Load(repoPath);
-            if (repo == null)
+            using (var repo = ObjectFactory.GetInstance<IRepoLoader>().Load(repoPath))
             {
-                return NoSuchRepoPage(repoPath);
+                if (repo == null)
+                {
+                    return NoSuchRepoPage(repoPath);
+                }
+                var renderer = ObjectFactory.GetInstance<IHistoryRenderer>();
+
+                // set these with incoming query...
+                renderer.AlwaysShowMasterFirst = flags.Contains("asm");
+                renderer.HideComplexHistory = flags.Contains("simple");
+                renderer.OnlyLocal = flags.Contains("local");
+
+                renderer.CommitIdToHilight = settings["show"];
+
+                var html = renderer.RenderRepositoryPage(repo, string.Join(",", flags));
+                html.StreamTo(response.OutputStream, Encoding.UTF8);
+
+                return null;
             }
-            var renderer = ObjectFactory.GetInstance<IHistoryRenderer>();
-
-            // set these with incoming query...
-            renderer.AlwaysShowMasterFirst = flags.Contains("asm");
-            renderer.HideComplexHistory = flags.Contains("simple");
-            renderer.OnlyLocal = flags.Contains("local");
-
-            renderer.CommitIdToHilight = settings["show"];
-
-            var html = renderer.RenderRepositoryPage(repo, string.Join(",",flags));
-            html.StreamTo(response.OutputStream, Encoding.UTF8);
-
-            return null;
         }
 
         private static string NoSuchRepoPage(string repoPath)
