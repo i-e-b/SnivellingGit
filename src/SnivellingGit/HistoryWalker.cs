@@ -68,7 +68,12 @@ namespace SnivellingGit
                 var tide = GetTide(branch);
                 foreach (var commit in SafeEnumerate(branch.Commits))
                 {
-                    if (table.AddCommit(CommitPoint.FromGitCommit(commit), branch.Name, tide)) break;
+                    if (table.AddCommit(CommitPoint.FromGitCommit(commit), branch.Name, tide))
+                    {   // most of the time, stopping here is ok, as branches come out once.
+                        // however, long term alternative branches break this assumption, so we must exhaustively
+                        // track every commit backward
+                        //break;
+                    }
                 }
 
             }
@@ -88,8 +93,9 @@ namespace SnivellingGit
                     {
                         if (!e.MoveNext()) yield break;
                     }
-                    catch
+                    catch (Exception ex)
                     {
+                        Console.WriteLine(ex);
                         yield break;
                     }
                     yield return e.Current;

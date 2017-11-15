@@ -79,7 +79,7 @@
             body.Add(T.g("div", "style","clear:both"));
 
             var svgRenderer = new SvgRenderer { HideComplexHistory = HideComplexHistory };
-            body.Add(svgRenderer.RenderCommitGraphToSvg(table, CommitIdToHilight, rowLimit:500));
+            body.Add(svgRenderer.RenderCommitGraphToSvg(table, CommitIdToHilight, rowLimit:5000));
 
             return doc;
         }

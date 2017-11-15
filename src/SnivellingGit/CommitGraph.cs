@@ -64,16 +64,18 @@
 
         void AddNode(CommitPoint commit, string sourceRefName, bool tideCrossed)
         {
-            if (commit.Id == _commitIdToHilight) sourceRefName = RefForSelected;
+            // if commit is selected, and is a merge: put it in it's own column
+            if (commit.Id == _commitIdToHilight
+                && commit.Parents.Length > 1) sourceRefName = RefForSelected;
 
             if (!_refColumns.ContainsKey(sourceRefName)) _refColumns.Add(sourceRefName, _refColumns.Count);
 
             _cells.Add(new GraphCell
             {
                 BranchNames = LookupOrEmpty(_refs, commit.Id),
-                Column = _refColumns[sourceRefName],
+                RefLine = sourceRefName,
                 CommitPoint = commit,
-                IsMerge = commit.Parents.Count() > 1,
+                IsMerge = commit.Parents.Length > 1,
                 LocalOnly = !tideCrossed,
                 IsPrunable = _prunableRefs.Contains(commit.Id)
             });
@@ -133,10 +135,28 @@
             var cellSet = _cells.OrderByDescending(c => c.CommitPoint.Date).ToArray();
             var cellLookup = _cells.ToDictionary(c => c.CommitPoint.Id);
 
+            
+            // TODO: 
+            //      this orders columns by most-recent-change-is-most-left.
+            //      I want to order by most recent common ancestor to column 0.
+            // 1) If there were 3 columns, Master, A, B; B forked from A and A from Master, then B should be to the right of A
+            // 2) If there were 3 cols Master, X, Y; X forked from Master 3 commits back, and Y 6 commits back, then Y should be to the right of X
+            //      Maybe do this as a post-process, going from the bottom of the graph up, mapping to right most columns first
+
+            // Plan:
+            //  - The left most column is zero
+            //  - Each cell gets an index (from the loop below) showing it's overall order.
+            //  - Each refLine/column gets a value that is (index where it connects to another column) + (index of that column)
+            //  - sort by that index and assign order value
+
             for (int index = 0; index < cellSet.Length; index++)
             {
                 var cell = cellSet[index];
                 cell.Row = index;
+
+                cell.Column = _refColumns[cell.RefLine]; // look up the column for the reference
+
+                //cell.CommitPoint.Parents.Any(
 
                 var children = FindAny(_reverseEdges, cell.CommitPoint.Id);
                 cell.ChildCells = LookupAll(cellLookup, children).Reverse();
@@ -144,7 +164,7 @@
                 // we reverse this so we can show a nicely nested set of lines
             }
 
-            // sort by date, youngest first
+            // sorted by date, youngest first
             return cellSet;
         }
         

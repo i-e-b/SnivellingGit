@@ -14,7 +14,7 @@ namespace SnivellingGit
         private const int cellw = 20;               // width of a cell
         private const int cellh = 14;               // height of a cell
         private const int cellMargin = 4;           // vertical gap between cells in a column
-        private const int cellmarginw = cellw + 7;  // margin between columns
+        private const int cellmarginw = cellw + 10;  // margin between columns
         private const int loopSpacing = 3;          // minimum horizontal gap between loop lines
 
         /// <summary>

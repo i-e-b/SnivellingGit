@@ -10,9 +10,9 @@ Remember to include a path to your target git directory (i.e. `C:\Work\MyProj` w
 
 * extend log limit a bit further if branches don't line up?
   - url flag to set log limit? Add a 'load more link
-* Is Sg holding a lock on directories?
-* Keep scroll position between page refresh?
+* Keep scroll position between page refresh
   - Load SVG over AJAX?
+* Change column ordering -- most recent merge is left-most col; this should reduce number of crossings
 
 ### Goals
 

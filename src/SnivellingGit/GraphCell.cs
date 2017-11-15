@@ -18,6 +18,11 @@
         public int Column { get; set; }
 
         /// <summary>
+        /// The reference/branch that this cell was found by following
+        /// </summary>
+        public string RefLine { get; set; }
+
+        /// <summary>
         /// Display row. From sort order, zero based.
         /// </summary>
         public int Row { get; set; }
