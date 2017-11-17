@@ -32,6 +32,7 @@ namespace SnivellingGit
         public TagContent RenderCommitGraphToSvg(ICommitGraph table, string hiliteSha, int rowLimit)
         {
             var content = T.g();
+            table.DoLayout("Head");
             var cells = table.Cells().ToArray();
 
             var widestLabel = cells.Select(c => GuessStringWidth(10, c.BranchNames.ToArray())).Max();

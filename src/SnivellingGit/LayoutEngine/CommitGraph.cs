@@ -1,4 +1,6 @@
-﻿namespace SnivellingGit
+﻿using System;
+
+namespace SnivellingGit
 {
     using System.Collections.Generic;
     using System.Linq;
@@ -8,10 +10,14 @@
     /// </summary>
     public class ColumnsCommitGraph: ICommitGraph
     {
-        readonly string _commitIdToHilight;
-        readonly List<GraphCell> _cells = new List<GraphCell>();
+        /// <summary> commit id -> cell details </summary>
+        readonly Dictionary<string, GraphCell> _cells = new Dictionary<string, GraphCell>();
+
         /// <summary> parent -> children </summary>
-        readonly Dictionary<string, HashSet<string>> _reverseEdges = new Dictionary<string, HashSet<string>>();
+        readonly Dictionary<string, HashSet<string>> parentToChildren = new Dictionary<string, HashSet<string>>();
+
+        /// <summary> child -> parents </summary>
+        readonly Dictionary<string, HashSet<string>> childToParents = new Dictionary<string, HashSet<string>>();
 
         readonly HashSet<string> _prunableRefs = new HashSet<string>();
 
@@ -24,15 +30,7 @@
         readonly Dictionary<string, List<string>> _refs = new Dictionary<string, List<string>>();
         readonly HashSet<string> _seenNodes = new HashSet<string>();
 
-        const string RefForSelected = "¶Selected";
-
-        /// <summary>
-        /// Prepare a new commit graph, with an optional SHA id that should be put it a 'selected' column
-        /// </summary>
-        public ColumnsCommitGraph(string commitIdToHilight)
-        {
-            _commitIdToHilight = commitIdToHilight;
-        }
+        GraphCell[] cellLayoutSet;
 
         /// <summary>
         /// Add a commit. Must be added in child->parent->g.parent order.
@@ -64,13 +62,9 @@
 
         void AddNode(CommitPoint commit, string sourceRefName, bool tideCrossed)
         {
-            // if commit is selected, and is a merge: put it in it's own column
-            if (commit.Id == _commitIdToHilight
-                && commit.Parents.Length > 1) sourceRefName = RefForSelected;
-
             if (!_refColumns.ContainsKey(sourceRefName)) _refColumns.Add(sourceRefName, _refColumns.Count);
 
-            _cells.Add(new GraphCell
+            _cells.Add(commit.Id, new GraphCell
             {
                 BranchNames = LookupOrEmpty(_refs, commit.Id),
                 RefLine = sourceRefName,
@@ -96,8 +90,10 @@
 
         void AddEdge(string childId, string parentId)
         {
-            if (!_reverseEdges.ContainsKey(parentId)) _reverseEdges.Add(parentId, new HashSet<string>());
-            _reverseEdges[parentId].Add(childId);
+            if (!parentToChildren.ContainsKey(parentId)) parentToChildren.Add(parentId, new HashSet<string>());
+            if (!childToParents.ContainsKey(childId)) childToParents.Add(childId, new HashSet<string>());
+            parentToChildren[parentId].Add(childId);
+            childToParents[childId].Add(parentId);
         }
 
         /// <summary>
@@ -128,49 +124,85 @@
         }
         
         /// <summary>
-        /// Get all commit cells
+        /// Layout the rows and columns for the current set of commit cells.
         /// </summary>
-        public IEnumerable<GraphCell> Cells()
-        {
-            var cellSet = _cells.OrderByDescending(c => c.CommitPoint.Date).ToArray();
-            var cellLookup = _cells.ToDictionary(c => c.CommitPoint.Id);
-
+        public void DoLayout(string primaryReference) {
+            var cellSet = _cells.Values.OrderByDescending(c => c.CommitPoint.Date).ToArray();
+            var cellLookup = _cells.Values.ToDictionary(c => c.CommitPoint.Id);
             
-            // TODO: 
-            //      this orders columns by most-recent-change-is-most-left.
-            //      I want to order by most recent common ancestor to column 0.
+            // Order by most recent common ancestor to column 0.
             // 1) If there were 3 columns, Master, A, B; B forked from A and A from Master, then B should be to the right of A
             // 2) If there were 3 cols Master, X, Y; X forked from Master 3 commits back, and Y 6 commits back, then Y should be to the right of X
             //      Maybe do this as a post-process, going from the bottom of the graph up, mapping to right most columns first
 
-            // Plan:
-            //  - The left most column is zero
-            //  - Each cell gets an index (from the loop below) showing it's overall order.
-            //  - Each refLine/column gets a value that is (index where it connects to another column) + (index of that column)
-            //  - sort by that index and assign order value
-
+            // set the row for each cell (purely by date order, no cells share a row)
             for (int index = 0; index < cellSet.Length; index++)
             {
                 var cell = cellSet[index];
                 cell.Row = index;
 
-                cell.Column = _refColumns[cell.RefLine]; // look up the column for the reference
-
-                //cell.CommitPoint.Parents.Any(
-
-                var children = FindAny(_reverseEdges, cell.CommitPoint.Id);
-                cell.ChildCells = LookupAll(cellLookup, children).Reverse();
+                var children = FindAny(parentToChildren, cell.CommitPoint.Id);
                 // because of the way we build the edges list, it's in descending order of distance from parent to child.
-                // we reverse this so we can show a nicely nested set of lines
+                // we reverse this so we can show a nicely nested set of lines -- longer lines tend to be further out
+                cell.ChildCells = LookupAll(cellLookup, children).Reverse();
             }
 
-            // sorted by date, youngest first
-            return cellSet;
+            // figure out the maximum depth of cells and their parents
+            var maxBranch = new Dictionary<string, int>(); // ref line => max index
+            foreach (var cell in cellSet) { UpdateMaxBranch(maxBranch, cell); }
+
+            // make the primary ref left-most:
+            if (maxBranch.ContainsKey(primaryReference)) { maxBranch[primaryReference] = 0; }
+
+            // assign columns to cells
+            var orderedRefs = maxBranch.OrderBy(kv => kv.Value).Select(kv=>kv.Key).ToArray();
+            for (int i = 0; i < orderedRefs.Length; i++)
+            {
+                _refColumns[orderedRefs[i]] = i;
+            }
+
+            foreach (var cell in cellSet)
+            {
+                cell.Column = _refColumns[cell.RefLine]; // look up the column for the reference
+            }
+
+            cellLayoutSet = cellSet;
         }
-        
-        static IEnumerable<TV> FindAny<TK, TV>(IReadOnlyDictionary<TK, HashSet<TV>> reverseEdges, TK id)
+
+        /// <summary>
+        /// Get all commit cells
+        /// </summary>
+        public IEnumerable<GraphCell> Cells()
         {
-            if (reverseEdges.ContainsKey(id)) return reverseEdges[id];
+            if (cellLayoutSet == null)
+            {
+                DoLayout("");
+            }
+
+            return cellLayoutSet;
+        }
+
+        // set the ref-line's max to the greatest of: cell row, existing value, parent's row
+        private void UpdateMaxBranch(Dictionary<string, int> maxBranch, GraphCell cell)
+        {
+            if ( ! maxBranch.ContainsKey(cell.RefLine)) maxBranch.Add(cell.RefLine, cell.Row);
+
+            var parents = FindAny(childToParents, cell.CommitPoint.Id);
+            var parentMax = MaxOrDefault(0, parents.Select(id => _cells[id].Row));
+            var existing = maxBranch[cell.RefLine];
+            
+            maxBranch[cell.RefLine] = Math.Max(Math.Max(parentMax, existing), cell.Row);
+        }
+
+        private int MaxOrDefault(int defaultValue, IEnumerable<int> list)
+        {
+            if (list == null) return defaultValue;
+            return list.Concat(new[] {defaultValue}).Max();
+        }
+
+        static IEnumerable<TV> FindAny<TK, TV>(IReadOnlyDictionary<TK, HashSet<TV>> lookupSet, TK id)
+        {
+            if (lookupSet.ContainsKey(id)) return lookupSet[id];
             return new TV[0];
         }
 

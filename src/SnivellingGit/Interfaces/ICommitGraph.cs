@@ -35,5 +35,10 @@
         /// </summary>
         /// <param name="commitId"></param>
         void MarkPrunable(string commitId);
+
+        /// <summary>
+        /// Layout the rows and columns for the current set of commit cells.
+        /// </summary>
+        void DoLayout(string primaryReference);
     }
 }

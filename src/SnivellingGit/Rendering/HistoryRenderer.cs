@@ -1,9 +1,7 @@
 ﻿namespace SnivellingGit
 {
     using System;
-    using System.IO;
     using System.Linq;
-    using System.Text;
     using LibGit2Sharp;
     using Tag;
 
@@ -38,7 +36,7 @@
         /// </summary>
         public TagContent RenderRepositoryPage(IRepository repo, string flags)
         {
-            ICommitGraph table = new ColumnsCommitGraph(CommitIdToHilight);
+            ICommitGraph table = new ColumnsCommitGraph();
 
             HistoryWalker.BuildCommitGraph(repo, table, OnlyLocal, AlwaysShowMasterFirst);
 
@@ -61,25 +59,25 @@
             body.Add(fileStatus);
             // */
 
-            var branches = T.g("div", "class", "floatBox")["Branches ", T.g("a", "href", "?" + flags)["Select None"], T.g("br/")];
+            var branches = T.g("div", "class", "floatBox")["Branches",  T.g("br/")];
             branches.Add(repo.Branches.Select(b=>ShaLink(flags, b.Tip.Sha, b.CanonicalName)));
             body.Add(branches);
             
-            var tags = T.g("div", "class", "floatBox")["Tags ", T.g("a", "href", "?" + flags)["Select None"], T.g("br/")];
+            var tags = T.g("div", "class", "floatBox")["Tags", T.g("br/")];
             tags.Add(repo.Tags.OrderByDescending(t=>t.Name).Select(b=>ShaLink(flags, b.Target.Sha, b.CanonicalName)));
             body.Add(tags);
 
-            var controls = T.g("div", "class","floatBox");
+            var controls = T.g("div", "class","floatBox")["Actions", T.g("br/"), T.g("a", "href", "?" + flags)["Select None"], T.g("br/")];
+            controls.Add(T.g("a", "href","./!fetch-all")["Fetch all and prune", T.g("br/")]);
             if (HasSelectedNode()) {
                 controls.Add(T.g("a","href","#")["Checkout selected (headless)", T.g("br/")]);
             }
-            controls.Add(T.g("a", "href","!fetch-all")["Fetch all and prune", T.g("br/")]);
 
             body.Add(controls);
             body.Add(T.g("div", "style","clear:both"));
 
             var svgRenderer = new SvgRenderer { HideComplexHistory = HideComplexHistory };
-            body.Add(svgRenderer.RenderCommitGraphToSvg(table, CommitIdToHilight, rowLimit:5000));
+            body.Add(svgRenderer.RenderCommitGraphToSvg(table, CommitIdToHilight, rowLimit:500));
 
             return doc;
         }
