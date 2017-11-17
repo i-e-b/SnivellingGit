@@ -1,4 +1,5 @@
 ﻿using System.Text;
+using LibGit2Sharp;
 using SnivellingGit.Interfaces;
 
 namespace Sg.Web
@@ -36,8 +37,27 @@ namespace Sg.Web
                 WriteIcon(rawResponse);
                 return null;
             }
+            
+            if (settings["command"] == "fetch-all") {
+                FetchForPath(repoPath);
+                // then continue to render
+            }
 
             return WriteMasterPage(rawResponse, repoPath, settings);
+        }
+
+        private static void FetchForPath(string repoPath)
+        {
+            // TODO: Move all the git loading stuff out of the web host
+            repoPath = repoPath.Replace('\\', '/'); // handle copy-and-paste from Windows paths
+            using (var repo = ObjectFactory.GetInstance<IRepoLoader>().Load(repoPath))
+            {
+                if (repo == null) return;
+
+                // This doesn't seem to work for TFS or for HTTPS schemes, even when the command-line would work
+                // TODO: just use the command line instead
+                Commands.Fetch(repo, repo.Head.RemoteName, new string[0], new FetchOptions{Prune = true}, "");
+            }
         }
 
         private static string WriteMasterPage(HttpListenerResponse response, string repoPath, NameValueCollection settings)

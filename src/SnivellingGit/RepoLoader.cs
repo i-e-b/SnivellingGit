@@ -26,7 +26,7 @@ namespace SnivellingGit
         /// Load a repository given a rootless path.
         /// <para>On *nix, all paths are rootless anyway. On Windows we need to guess something like C:\{requestedPath}</para>
         /// </summary>
-        public IRepository Load(string requestedPath)
+        public Repository Load(string requestedPath)
         {
             foreach (var drive in _fs.Directory.GetLogicalDrives())
             {

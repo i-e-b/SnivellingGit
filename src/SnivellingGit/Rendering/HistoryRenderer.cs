@@ -70,7 +70,7 @@ namespace SnivellingGit.Rendering
             body.Add(tags);
 
             var controls = T.g("div", "class","floatBox")["Actions", T.g("br/"), T.g("a", "href", "?" + flags)["Select None"], T.g("br/")];
-            controls.Add(T.g("a", "href","./!fetch-all")["Fetch all and prune", T.g("br/")]);
+            controls.Add(T.g("a", "href","?"+flags+"command=fetch-all")["Fetch all and prune", T.g("br/")]);
             if (HasSelectedNode()) {
                 controls.Add(T.g("a","href","#")["Checkout selected (headless)", T.g("br/")]);
             }
