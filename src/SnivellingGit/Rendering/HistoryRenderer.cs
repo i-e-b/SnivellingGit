@@ -66,7 +66,7 @@ namespace SnivellingGit.Rendering
             body.Add(branches);
             
             var tags = T.g("div", "class", "floatBox")["Tags", T.g("br/")];
-            tags.Add(repo.Tags.OrderByDescending(t=>t.Name).Select(b=>ShaLink(flags, b.Target.Sha, b.CanonicalName)));
+            tags.Add(repo.Tags.OrderByDescending(t=>t.FriendlyName).Select(b=>ShaLink(flags, b.Target.Sha, b.CanonicalName)));
             body.Add(tags);
 
             var controls = T.g("div", "class","floatBox")["Actions", T.g("br/"), T.g("a", "href", "?" + flags)["Select None"], T.g("br/")];

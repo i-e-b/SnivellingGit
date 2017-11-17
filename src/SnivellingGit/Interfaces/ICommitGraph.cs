@@ -1,5 +1,4 @@
 ﻿using System.Collections.Generic;
-using LibGit2Sharp;
 using SnivellingGit.LayoutEngine;
 
 namespace SnivellingGit.Interfaces

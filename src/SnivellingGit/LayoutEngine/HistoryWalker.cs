@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using LibGit2Sharp;
 using SnivellingGit.Interfaces;
 
@@ -35,12 +34,12 @@ namespace SnivellingGit.LayoutEngine
                     }
                     else if (! OnlyLocal) // add remote reference
                     {
-                        table.AddReference(branchRef.TrackedBranch.Name, branchRef.TrackedBranch.Tip.Sha);
+                        table.AddReference(branchRef.TrackedBranch.FriendlyName, branchRef.TrackedBranch.Tip.Sha);
                     }
                 }
 
                 // add direct reference (may be local, or untracked remote)
-                table.AddReference(branchRef.Name, branchRef.Tip.Sha);
+                table.AddReference(branchRef.FriendlyName, branchRef.Tip.Sha);
             }
 
             var master = repo.Branches["master"];
@@ -63,7 +62,7 @@ namespace SnivellingGit.LayoutEngine
             {
                 if (branch.IsRemote && OnlyLocal) continue;
                 if (branch.IsCurrentRepositoryHead) continue;
-                if (branch.Name == "master" && AlwaysShowMasterFirst) continue;
+                if (branch.FriendlyName == "master" && AlwaysShowMasterFirst) continue;
 
 
                 var tide = GetTide(branch);
@@ -71,7 +70,7 @@ namespace SnivellingGit.LayoutEngine
                 {
                     if (!table.Seen(commit.Sha))
                     {
-                        table.AddCommit(CommitPoint.FromGitCommit(commit), branch.Name, tide);
+                        table.AddCommit(CommitPoint.FromGitCommit(commit), branch.FriendlyName, tide);
                     }
                 }
 
