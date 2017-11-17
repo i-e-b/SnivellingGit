@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 
-namespace SnivellingGit
+namespace SnivellingGit.LayoutEngine
 {
     /// <summary>
     /// A helper to place history loops so they don't overlap.

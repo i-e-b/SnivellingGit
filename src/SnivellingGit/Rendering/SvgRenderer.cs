@@ -1,9 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using SnivellingGit.Interfaces;
+using SnivellingGit.LayoutEngine;
 using Tag;
 
-namespace SnivellingGit
+namespace SnivellingGit.Rendering
 {
     /// <summary>
     /// Renders Commit Graphs into SVG tree images

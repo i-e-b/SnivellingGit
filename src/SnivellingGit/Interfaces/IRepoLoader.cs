@@ -1,7 +1,7 @@
-namespace SnivellingGit
-{
-    using LibGit2Sharp;
+using LibGit2Sharp;
 
+namespace SnivellingGit.Interfaces
+{
     /// <summary>
     /// Load Git repositories from rootless paths
     /// </summary>

@@ -1,7 +1,9 @@
-﻿namespace SnivellingGit
-{
-    using System.Collections.Generic;
+﻿using System.Collections.Generic;
+using LibGit2Sharp;
+using SnivellingGit.LayoutEngine;
 
+namespace SnivellingGit.Interfaces
+{
     /// <summary>
     /// Interface for building graphical representations of commit graphs
     /// </summary>
@@ -40,5 +42,10 @@
         /// Layout the rows and columns for the current set of commit cells.
         /// </summary>
         void DoLayout(string primaryReference);
+
+        /// <summary>
+        /// Return true if the commit is already registered
+        /// </summary>
+        bool Seen(string commitSha);
     }
 }

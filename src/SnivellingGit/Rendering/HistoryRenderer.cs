@@ -1,10 +1,12 @@
-﻿namespace SnivellingGit
-{
-    using System;
-    using System.Linq;
-    using LibGit2Sharp;
-    using Tag;
+﻿using System;
+using System.Linq;
+using LibGit2Sharp;
+using SnivellingGit.Interfaces;
+using SnivellingGit.LayoutEngine;
+using Tag;
 
+namespace SnivellingGit.Rendering
+{
     /// <summary>
     /// RenderRepositoryPage an SVG from a git repository
     /// </summary>

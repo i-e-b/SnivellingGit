@@ -2,8 +2,9 @@
 using System.Collections.Generic;
 using System.Linq;
 using LibGit2Sharp;
+using SnivellingGit.Interfaces;
 
-namespace SnivellingGit
+namespace SnivellingGit.LayoutEngine
 {
     /// <summary>
     /// Walk a repo and build a commit graph
@@ -58,7 +59,7 @@ namespace SnivellingGit
                 if (table.AddCommit(CommitPoint.FromGitCommit(commit), "Head", headTide)) break;
             }
 
-            foreach (var branch in repo.Branches.OrderByDescending(b => b.Tip.Author.When))
+            foreach (var branch in repo.Branches)
             {
                 if (branch.IsRemote && OnlyLocal) continue;
                 if (branch.IsCurrentRepositoryHead) continue;
@@ -68,11 +69,9 @@ namespace SnivellingGit
                 var tide = GetTide(branch);
                 foreach (var commit in SafeEnumerate(branch.Commits))
                 {
-                    if (table.AddCommit(CommitPoint.FromGitCommit(commit), branch.Name, tide))
-                    {   // most of the time, stopping here is ok, as branches come out once.
-                        // however, long term alternative branches break this assumption, so we must exhaustively
-                        // track every commit backward
-                        //break;
+                    if (!table.Seen(commit.Sha))
+                    {
+                        table.AddCommit(CommitPoint.FromGitCommit(commit), branch.Name, tide);
                     }
                 }
 

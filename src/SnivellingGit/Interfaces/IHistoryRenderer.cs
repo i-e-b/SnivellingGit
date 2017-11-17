@@ -1,9 +1,8 @@
-﻿using Tag;
+﻿using LibGit2Sharp;
+using Tag;
 
-namespace SnivellingGit
+namespace SnivellingGit.Interfaces
 {
-    using LibGit2Sharp;
-
     /// <summary>
     /// HTML page renderer for the main graph and status
     /// </summary>

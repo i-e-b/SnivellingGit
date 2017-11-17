@@ -1,9 +1,9 @@
-﻿namespace SnivellingGit
-{
-    using System;
-    using System.Linq;
-    using LibGit2Sharp;
+﻿using System;
+using System.Linq;
+using LibGit2Sharp;
 
+namespace SnivellingGit.LayoutEngine
+{
     /// <summary>
     /// Represents a point in the commit DAG.
     /// Used as the layout model for a commit point.

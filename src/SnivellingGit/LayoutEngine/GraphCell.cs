@@ -1,7 +1,7 @@
-﻿namespace SnivellingGit
-{
-    using System.Collections.Generic;
+﻿using System.Collections.Generic;
 
+namespace SnivellingGit.LayoutEngine
+{
     /// <summary>
     /// Visual layout of a commit.
     /// </summary>

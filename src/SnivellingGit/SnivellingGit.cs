@@ -1,4 +1,6 @@
 ﻿using System;
+using SnivellingGit.Interfaces;
+using SnivellingGit.Rendering;
 
 namespace SnivellingGit
 {

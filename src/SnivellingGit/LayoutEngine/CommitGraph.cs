@@ -1,10 +1,11 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using LibGit2Sharp;
+using SnivellingGit.Interfaces;
 
-namespace SnivellingGit
+namespace SnivellingGit.LayoutEngine
 {
-    using System.Collections.Generic;
-    using System.Linq;
-
     /// <summary>
     /// table-based layout for commits
     /// </summary>
@@ -167,6 +168,14 @@ namespace SnivellingGit
             }
 
             cellLayoutSet = cellSet;
+        }
+
+        /// <summary>
+        /// Returns true when the commit has been added already
+        /// </summary>
+        public bool Seen(string commitSha)
+        {
+            return _seenNodes.Contains(commitSha);
         }
 
         /// <summary>

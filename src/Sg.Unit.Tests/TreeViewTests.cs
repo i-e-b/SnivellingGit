@@ -1,4 +1,7 @@
-﻿namespace Sg.Unit.Tests
+﻿using SnivellingGit.Interfaces;
+using SnivellingGit.LayoutEngine;
+
+namespace Sg.Unit.Tests
 {
     using System;
     using System.Linq;

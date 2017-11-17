@@ -1,3 +1,5 @@
+using SnivellingGit.Interfaces;
+
 namespace SnivellingGit
 {
     using System;
