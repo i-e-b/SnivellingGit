@@ -76,6 +76,9 @@
       <HintPath>..\..\packages\LibGit2Sharp.0.24.0\lib\net40\LibGit2Sharp.dll</HintPath>
     </Reference>
     <Reference Include="Microsoft.CSharp" />
+    <Reference Include="RunProcess, Version=1.0.2.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\RunProcess.1.0.5\lib\net40\RunProcess.dll</HintPath>
+    </Reference>
     <Reference Include="StructureMap">
       <HintPath>..\..\packages\structuremap.3.0.3.116\lib\net40\StructureMap.dll</HintPath>
     </Reference>
@@ -89,6 +92,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="GitCommands\GitAction.cs" />
     <Compile Include="LayoutEngine\CommitGraph.cs" />
     <Compile Include="LayoutEngine\CommitPoint.cs" />
     <Compile Include="Rendering\HistoryRenderer.cs" />

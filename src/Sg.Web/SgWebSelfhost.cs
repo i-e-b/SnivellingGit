@@ -1,5 +1,6 @@
 ﻿using System.Text;
 using LibGit2Sharp;
+using SnivellingGit.GitCommands;
 using SnivellingGit.Interfaces;
 
 namespace Sg.Web
@@ -56,7 +57,8 @@ namespace Sg.Web
 
                 // This doesn't seem to work for TFS or for HTTPS schemes, even when the command-line would work
                 // TODO: just use the command line instead
-                Commands.Fetch(repo, repo.Head.RemoteName, new string[0], new FetchOptions{Prune = true}, "");
+                //Commands.Fetch(repo, repo.Head.RemoteName, new string[0], new FetchOptions{Prune = true}, "");
+                GitAction.FetchAllPrune(repo);
             }
         }
 
