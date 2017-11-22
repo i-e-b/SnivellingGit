@@ -33,6 +33,19 @@ namespace SnivellingGit.Rendering
         /// </summary>
         public string CommitIdToHilight { get; set; }
 
+
+        /// <summary>
+        /// Render the SVG graph alone
+        /// </summary>
+        public TagContent RenderSvgGraph(Repository repo, string flags)
+        {
+            ICommitGraph table = new ColumnsCommitGraph();
+            HistoryWalker.BuildCommitGraph(repo, table, OnlyLocal, AlwaysShowMasterFirst);
+
+            var svgRenderer = new SvgRenderer { HideComplexHistory = HideComplexHistory };
+            return svgRenderer.RenderCommitGraphToSvg(table, CommitIdToHilight, rowLimit:500);
+        }
+
         /// <summary>
         /// Render a complete HTML page, containing status, controls and an SVG visualisation of the history.
         /// </summary>
@@ -70,18 +83,27 @@ namespace SnivellingGit.Rendering
             body.Add(tags);
 
             var controls = T.g("div", "class","floatBox")["Actions", T.g("br/"), T.g("a", "href", "?" + flags)["Select None"], T.g("br/")];
-            controls.Add(T.g("a", "href","?"+flags+"command=fetch-all")["Fetch all and prune", T.g("br/")]);
+            controls.Add(GitActionLink("fetch-all", "Fetch all and prune"));
             if (HasSelectedNode()) {
                 controls.Add(T.g("a","href","#")["Checkout selected (headless)", T.g("br/")]);
             }
 
             body.Add(controls);
+
+
+            body.Add(T.g("div", "class", "floatBox")["Log output", T.g("br/"), T.g("div", "id", "log")]);
+
             body.Add(T.g("div", "style","clear:both"));
 
             var svgRenderer = new SvgRenderer { HideComplexHistory = HideComplexHistory };
-            body.Add(svgRenderer.RenderCommitGraphToSvg(table, CommitIdToHilight, rowLimit:500));
+            body.Add(T.g("div", "id", "svgHost")[svgRenderer.RenderCommitGraphToSvg(table, CommitIdToHilight, rowLimit:500)]);
 
             return doc;
+        }
+
+        private static TagContent GitActionLink(string action, string text)
+        {
+            return T.g()[T.g("a", "href", "#", "onclick", "gitAction('" + action + "')")[text], T.g("br/")];
         }
 
         private TagContent ShaLink(string flags, string sha, string text)

@@ -1,5 +1,4 @@
 ﻿using System.Text;
-using LibGit2Sharp;
 using SnivellingGit.GitCommands;
 using SnivellingGit.Interfaces;
 
@@ -28,37 +27,64 @@ namespace Sg.Web
             }
         }
 
-        public static string SendResponse(HttpListenerRequest request, HttpListenerResponse rawResponse)
+        public static string SendResponse(HttpListenerRequest request, HttpListenerResponse response)
         {
             var repoPath = request.Url.AbsolutePath;
             var settings = request.QueryString;
+            var command = settings["command"];
 
             if (repoPath == "/favicon.ico")
             {
-                WriteIcon(rawResponse);
+                WriteIcon(response);
                 return null;
             }
-            
-            if (settings["command"] == "fetch-all") {
-                FetchForPath(repoPath);
-                // then continue to render
-            }
 
-            return WriteMasterPage(rawResponse, repoPath, settings);
+            switch (command) {
+                case "fetch-all":
+                    return HandleAction(GitAction.FetchAllPrune, repoPath, response);
+
+                case "render-svg":
+                    return WriteSvgGraph(response, repoPath, settings);
+
+                default:
+                    return WriteMasterPage(response, repoPath, settings);
+            }
         }
 
-        private static void FetchForPath(string repoPath)
+        private static string HandleAction(GitAction.GeneralAction action, string repoPath, HttpListenerResponse response)
         {
-            // TODO: Move all the git loading stuff out of the web host
-            repoPath = repoPath.Replace('\\', '/'); // handle copy-and-paste from Windows paths
+            var ok = action(repoPath, out var logs);
+            if (!ok) response.StatusCode = 500;
+            return logs.Replace("\n", "<br/>");
+        }
+        
+
+        private static string WriteSvgGraph(HttpListenerResponse response, string repoPath, NameValueCollection settings)
+        {
+            // TODO: de-duplicate between this on 'WriteMasterPage'
+            var flags = GetFlags(settings);
+            response.AddHeader("Content-Type", "image/svg+xml");
+
             using (var repo = ObjectFactory.GetInstance<IRepoLoader>().Load(repoPath))
             {
-                if (repo == null) return;
+                if (repo == null)
+                {
+                    response.StatusCode = 500;
+                    return null;
+                }
+                var renderer = ObjectFactory.GetInstance<IHistoryRenderer>();
 
-                // This doesn't seem to work for TFS or for HTTPS schemes, even when the command-line would work
-                // TODO: just use the command line instead
-                //Commands.Fetch(repo, repo.Head.RemoteName, new string[0], new FetchOptions{Prune = true}, "");
-                GitAction.FetchAllPrune(repo);
+                // set these with incoming query...
+                renderer.AlwaysShowMasterFirst = flags.Contains("asm");
+                renderer.HideComplexHistory = flags.Contains("simple");
+                renderer.OnlyLocal = flags.Contains("local");
+
+                renderer.CommitIdToHilight = settings["show"];
+
+                var html = renderer.RenderSvgGraph(repo, string.Join(",", flags));
+                html.StreamTo(response.OutputStream, Encoding.UTF8);
+
+                return null;
             }
         }
 
@@ -67,7 +93,6 @@ namespace Sg.Web
             var flags= GetFlags(settings);
             response.AddHeader("Content-Type", "text/html");
 
-            repoPath = repoPath.Replace('\\', '/'); // handle copy-and-paste from Windows paths
             using (var repo = ObjectFactory.GetInstance<IRepoLoader>().Load(repoPath))
             {
                 if (repo == null)

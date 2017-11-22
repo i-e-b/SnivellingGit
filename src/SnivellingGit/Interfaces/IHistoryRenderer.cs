@@ -14,6 +14,11 @@ namespace SnivellingGit.Interfaces
         TagContent RenderRepositoryPage(IRepository repo, string flags);
 
         /// <summary>
+        /// Render the SVG graph alone
+        /// </summary>
+        TagContent RenderSvgGraph(Repository repo, string flags);
+
+        /// <summary>
         /// Default false. If true, try to show a branch named 'Master' before all others, including 'HEAD'.
         /// To do: generalise this to any named branch
         /// </summary>

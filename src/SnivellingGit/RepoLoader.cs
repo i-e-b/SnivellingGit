@@ -28,6 +28,7 @@ namespace SnivellingGit
         /// </summary>
         public Repository Load(string requestedPath)
         {
+            requestedPath = requestedPath.Replace('\\', '/');
             foreach (var drive in _fs.Directory.GetLogicalDrives())
             {
                 var candidate = Path.Combine(drive, requestedPath);

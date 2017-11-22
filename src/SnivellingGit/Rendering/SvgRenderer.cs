@@ -101,7 +101,7 @@ namespace SnivellingGit.Rendering
                 ]
             ];
 
-            return T.g("svg", "id", "svgroot", "width", width + "px", "height", height + "px")[rootElement];
+            return T.g("svg", "id", "svgroot", "width", width + "px", "height", height + "px", "onload","inject()")[rootElement];
         }
 
         private TagContent CommitNode(bool isTracked, int x, int y, string id, string styleClass, string color, string title)
