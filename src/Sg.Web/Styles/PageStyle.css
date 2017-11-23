@@ -26,6 +26,16 @@ a, a:link, a:visited, a:hover, a:active {color: #000; text-decoration: underline
     50% { opacity:0.4 }
 }
 
+#controlHost {
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 999;
+    width: 100%;
+    height: 200px;
+    background: #fff;
+}
+#spacer { clear: both; height: 200px; }
 .data {font-family: monospace; font-size:11px;}
 #log { font-family: monospace; font-size: 11px; }
 .logSuccess { background:#afa; }

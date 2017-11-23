@@ -7,10 +7,7 @@ var QueryString = function () {
     var b = {};
     for (var i = 0; i < a.length; ++i) {
         var p = a[i].split('=', 2);
-        if (p.length === 1)
-            b[p[0]] = "";
-        else
-            b[p[0]] = decodeURIComponent(p[1].replace(/\+/g, " "));
+        b[p[0]] = p.length === 1 ? "" : decodeURIComponent(p[1].replace(/\+/g, " "));
     }
     return b;
 }();
@@ -18,15 +15,15 @@ var QueryString = function () {
 // This function is triggered by the SVG script in "SvgEmbeddedScript.js"
 function svgElementClicked(e) {
     if (e.id && e.id.length > 20) {
-        //window.location.href = '?show=' + e.id;
         QueryString["show"] = e.id;
         loadGraph();
+        loadHeaders();
     }
 }
 
 // Read and replace the control headers
 function loadHeaders() {
-    loadSelfReference("controlHost", "repoControls");
+    loadSelfReference("controlHost", "repo-controls");
 }
 
 // Read and replace the SVG graph

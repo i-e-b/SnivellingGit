@@ -6,13 +6,6 @@ To use, run the Sg.Web self-host exe, and then load the stated Url in your brows
 Remember to include a path to your target git directory (i.e. `C:\Work\MyProj` would need a url of `http://localhost:8080/Work/MyProj`)
 
 
-### Immediate To Do
-
-* extend log limit a bit further if branches don't line up?
-  - url flag to set log limit? Add a 'load more' link?
-* Keep scroll position between page refresh
-  - Load SVG over AJAX?
-
 ### Goals
 
 * Move head (checkout)

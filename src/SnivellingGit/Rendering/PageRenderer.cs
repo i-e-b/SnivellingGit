@@ -8,9 +8,9 @@ using Tag;
 namespace SnivellingGit.Rendering
 {
     /// <summary>
-    /// RenderRepositoryPage an SVG from a git repository
+    /// HTML page renderer for the main graph, status and controls
     /// </summary>
-    public class HistoryRenderer : IHistoryRenderer
+    public class PageRenderer : IPageRenderer
     {
         /// <summary>
         /// Default false. If true, try to show a branch named 'Master' before all others, including 'HEAD'.
@@ -33,11 +33,10 @@ namespace SnivellingGit.Rendering
         /// </summary>
         public string CommitIdToHilight { get; set; }
 
-
         /// <summary>
-        /// Render the SVG graph alone
+        /// Render the SVG graph of the repo's history and current branches
         /// </summary>
-        public TagContent RenderSvgGraph(Repository repo, string flags)
+        public TagContent RenderSvgGraph(IRepository repo)
         {
             ICommitGraph table = new ColumnsCommitGraph();
             HistoryWalker.BuildCommitGraph(repo, table, OnlyLocal, AlwaysShowMasterFirst);
@@ -47,18 +46,12 @@ namespace SnivellingGit.Rendering
         }
 
         /// <summary>
-        /// Render a complete HTML page, containing status, controls and an SVG visualisation of the history.
+        /// Render a set of repo-wide controls to sit above the history graph
         /// </summary>
-        public TagContent RenderRepositoryPage(IRepository repo, string flags)
-        {
-            ICommitGraph table = new ColumnsCommitGraph();
+        public TagContent RenderControls(IRepository repo, string flags) {
+            var controls = T.g();
 
-            HistoryWalker.BuildCommitGraph(repo, table, OnlyLocal, AlwaysShowMasterFirst);
-
-
-            var doc = WriteHtmlHeader(GitShortPath(repo.Info.Path), out var body);
-
-            body.Add(T.g("p")["Currently checked out: ", T.g("span", "class","data")[repo.Head.CanonicalName]]);
+            controls.Add(T.g("p")["Currently checked out: ", T.g("span", "class","data")[repo.Head.CanonicalName]]);
 
             // Retrieving status on large repos is slow -- this should get rolled out to an async call?
             /*
@@ -76,34 +69,49 @@ namespace SnivellingGit.Rendering
 
             var branches = T.g("div", "class", "floatBox")["Branches",  T.g("br/")];
             branches.Add(repo.Branches.Select(b=>ShaLink(flags, b.Tip.Sha, b.CanonicalName)));
-            body.Add(branches);
+            controls.Add(branches);
             
             var tags = T.g("div", "class", "floatBox")["Tags", T.g("br/")];
             tags.Add(repo.Tags.OrderByDescending(t=>t.FriendlyName).Select(b=>ShaLink(flags, b.Target.Sha, b.CanonicalName)));
-            body.Add(tags);
+            controls.Add(tags);
 
-            var controls = T.g("div", "class","floatBox")["Actions", T.g("br/"), T.g("a", "href", "?" + flags)["Select None"], T.g("br/")];
-            controls.Add(GitActionLink("fetch-all", "Fetch all and prune"));
+            var actions = T.g("div", "class","floatBox")["Actions", T.g("br/")];
+            actions.Add(GitActionLink("fetch-all", "Fetch all and prune"));
             if (HasSelectedNode()) {
-                controls.Add(T.g("a","href","#")["Checkout selected (headless)", T.g("br/")]);
+                actions.Add(T.g("a","href","javascript:void")["Checkout selected (headless)"], T.g("br/"));
+                actions.Add(T.g("a", "href", "?" + flags)["Select None"], T.g("br/"));
             }
 
-            body.Add(controls);
+            controls.Add(actions);
 
 
-            body.Add(T.g("div", "class", "floatBox")["Log output", T.g("br/"), T.g("div", "id", "log")]);
+            controls.Add(T.g("div", "class", "floatBox")["Log output", T.g("br/"), T.g("div", "id", "log")]);
+            return controls;
+        }
 
-            body.Add(T.g("div", "style","clear:both"));
+        /// <summary>
+        /// Render a complete HTML page, containing status, controls and an SVG visualisation of the history.
+        /// The page scripts included allow interactive partial updates, and must be updated if tag IDs are changed here.
+        /// </summary>
+        public TagContent RenderRepositoryPage(IRepository repo, string flags)
+        {
+            var doc = WriteHtmlHeader(GitShortPath(repo.Info.Path), out var body);
 
-            var svgRenderer = new SvgRenderer { HideComplexHistory = HideComplexHistory };
-            body.Add(T.g("div", "id", "svgHost")[svgRenderer.RenderCommitGraphToSvg(table, CommitIdToHilight, rowLimit:500)]);
+            // Add controls into a container
+            body.Add(T.g("div","id","controlHost")[RenderControls(repo, flags)]);
+
+            // Add SVG to the page.
+            // We must have an existing one on the page to activate the JavaScript click responder;
+            // after that, we can update through AJAX calls.
+            body.Add(T.g("div", "id", "spacer"));
+            body.Add(T.g("div", "id", "svgHost")[RenderSvgGraph(repo)]);
 
             return doc;
         }
 
         private static TagContent GitActionLink(string action, string text)
         {
-            return T.g()[T.g("a", "href", "#", "onclick", "gitAction('" + action + "')")[text], T.g("br/")];
+            return T.g()[T.g("a", "href", "javascript:void", "onclick", "gitAction('" + action + "')")[text], T.g("br/")];
         }
 
         private TagContent ShaLink(string flags, string sha, string text)
@@ -139,15 +147,6 @@ namespace SnivellingGit.Rendering
             html.Add(body);
 
             return html;
-        }
-
-
-        // ReSharper disable once UnusedMember.Local
-        static string Cleanup(string message, int width = 0)
-        {
-            var msg = message.Replace("\r", "").Replace("\n", " ").Replace("\t", " ");
-            if (width <= 0) return msg;
-            return msg.Substring(0, Math.Min(Console.BufferWidth - width - 10, msg.Length));
         }
     }
 }

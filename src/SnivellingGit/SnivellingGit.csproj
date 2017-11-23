@@ -95,11 +95,11 @@
     <Compile Include="GitCommands\GitAction.cs" />
     <Compile Include="LayoutEngine\CommitGraph.cs" />
     <Compile Include="LayoutEngine\CommitPoint.cs" />
-    <Compile Include="Rendering\HistoryRenderer.cs" />
+    <Compile Include="Rendering\PageRenderer.cs" />
     <Compile Include="LayoutEngine\GraphCell.cs" />
     <Compile Include="LayoutEngine\HistoryWalker.cs" />
     <Compile Include="Interfaces\ICommitGraph.cs" />
-    <Compile Include="Interfaces\IHistoryRenderer.cs" />
+    <Compile Include="Interfaces\IPageRenderer.cs" />
     <Compile Include="Interfaces\IRepoLoader.cs" />
     <Compile Include="LayoutEngine\LoopPlacer.cs" />
     <Compile Include="SnivellingGit.cs" />

@@ -1,6 +1,8 @@
 ﻿using System.Text;
+using LibGit2Sharp;
 using SnivellingGit.GitCommands;
 using SnivellingGit.Interfaces;
+using Tag;
 
 namespace Sg.Web
 {
@@ -46,6 +48,9 @@ namespace Sg.Web
                 case "render-svg":
                     return WriteSvgGraph(response, repoPath, settings);
 
+                case "repo-controls":
+                    return WriteControlHeaders(response, repoPath, settings);
+
                 default:
                     return WriteMasterPage(response, repoPath, settings);
             }
@@ -57,49 +62,46 @@ namespace Sg.Web
             if (!ok) response.StatusCode = 500;
             return logs.Replace("\n", "<br/>");
         }
-        
 
         private static string WriteSvgGraph(HttpListenerResponse response, string repoPath, NameValueCollection settings)
         {
-            // TODO: de-duplicate between this on 'WriteMasterPage'
-            var flags = GetFlags(settings);
-            response.AddHeader("Content-Type", "image/svg+xml");
-
-            using (var repo = ObjectFactory.GetInstance<IRepoLoader>().Load(repoPath))
-            {
-                if (repo == null)
-                {
-                    response.StatusCode = 500;
-                    return null;
-                }
-                var renderer = ObjectFactory.GetInstance<IHistoryRenderer>();
-
-                // set these with incoming query...
-                renderer.AlwaysShowMasterFirst = flags.Contains("asm");
-                renderer.HideComplexHistory = flags.Contains("simple");
-                renderer.OnlyLocal = flags.Contains("local");
-
-                renderer.CommitIdToHilight = settings["show"];
-
-                var html = renderer.RenderSvgGraph(repo, string.Join(",", flags));
-                html.StreamTo(response.OutputStream, Encoding.UTF8);
-
-                return null;
-            }
+            return RenderFromRepo(response,
+                (repo,flags,renderer)=>renderer.RenderSvgGraph(repo),
+                (resp) => {resp.StatusCode = 500; return null; },
+                "image/svg+xml", repoPath, settings);
         }
 
         private static string WriteMasterPage(HttpListenerResponse response, string repoPath, NameValueCollection settings)
         {
-            var flags= GetFlags(settings);
-            response.AddHeader("Content-Type", "text/html");
+            return RenderFromRepo(response,
+                (repo,flags,renderer)=>renderer.RenderRepositoryPage(repo,string.Join(",", flags)),
+                (resp) => {resp.StatusCode = 404; return NoSuchRepoPage(repoPath);  },
+                "text/html", repoPath, settings);
+        }
+
+        private static string WriteControlHeaders(HttpListenerResponse response, string repoPath, NameValueCollection settings)
+        {
+            return RenderFromRepo(response,
+                (repo,flags,renderer)=>renderer.RenderControls(repo,string.Join(",", flags)),
+                (resp) => {resp.StatusCode = 500; return null; },
+                "text/html", repoPath, settings);
+        }
+
+        private static string RenderFromRepo(HttpListenerResponse response, 
+            Func<IRepository,ISet<string>, IPageRenderer, TagContent> renderCall,
+            Func<HttpListenerResponse, string> noRepoAction,
+            string contentType, string repoPath, NameValueCollection settings)
+        {
+            var flags = GetFlags(settings);
+            response.AddHeader("Content-Type", contentType);
 
             using (var repo = ObjectFactory.GetInstance<IRepoLoader>().Load(repoPath))
             {
                 if (repo == null)
                 {
-                    return NoSuchRepoPage(repoPath);
+                    return noRepoAction(response);
                 }
-                var renderer = ObjectFactory.GetInstance<IHistoryRenderer>();
+                var renderer = ObjectFactory.GetInstance<IPageRenderer>();
 
                 // set these with incoming query...
                 renderer.AlwaysShowMasterFirst = flags.Contains("asm");
@@ -108,7 +110,7 @@ namespace Sg.Web
 
                 renderer.CommitIdToHilight = settings["show"];
 
-                var html = renderer.RenderRepositoryPage(repo, string.Join(",", flags));
+                var html = renderCall(repo, flags, renderer);
                 html.StreamTo(response.OutputStream, Encoding.UTF8);
 
                 return null;
@@ -117,6 +119,7 @@ namespace Sg.Web
 
         private static string NoSuchRepoPage(string repoPath)
         {
+            // TODO: a navigation page from here
             var sb = new StringBuilder();
             sb.Append("<html><head><title>Not Found</title></head><body>");
             sb.Append("<h1>Not found</h1>");

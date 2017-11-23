@@ -4,19 +4,19 @@ using Tag;
 namespace SnivellingGit.Interfaces
 {
     /// <summary>
-    /// HTML page renderer for the main graph and status
+    /// HTML page renderer for the main graph, status and controls
     /// </summary>
-    public interface IHistoryRenderer
+    public interface IPageRenderer
     {
         /// <summary>
-        /// Render a repository view from the given directory into a HTML document
+        /// Render a repository view from the given git repository
         /// </summary>
         TagContent RenderRepositoryPage(IRepository repo, string flags);
 
         /// <summary>
-        /// Render the SVG graph alone
+        /// Render the SVG graph of the repo's history and current branches
         /// </summary>
-        TagContent RenderSvgGraph(Repository repo, string flags);
+        TagContent RenderSvgGraph(IRepository repo);
 
         /// <summary>
         /// Default false. If true, try to show a branch named 'Master' before all others, including 'HEAD'.
@@ -38,5 +38,10 @@ namespace SnivellingGit.Interfaces
         /// If set, the matching commit (by SHA hash) will blink
         /// </summary>
         string CommitIdToHilight { get; set; }
+
+        /// <summary>
+        /// Render a set of repo-wide controls to sit above the history graph
+        /// </summary>
+        TagContent RenderControls(IRepository repo, string flags);
     }
 }

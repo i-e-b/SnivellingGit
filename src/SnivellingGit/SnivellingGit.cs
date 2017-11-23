@@ -22,7 +22,7 @@ namespace SnivellingGit
         {
             using (var repo = ObjectFactory.GetInstance<IRepoLoader>().Load("."))
             {
-                var html = ObjectFactory.GetInstance<IHistoryRenderer>().RenderRepositoryPage(repo, "");
+                var html = ObjectFactory.GetInstance<IPageRenderer>().RenderRepositoryPage(repo, "");
                 Console.WriteLine(html);
             }
         }
@@ -34,7 +34,7 @@ namespace SnivellingGit
         {
             ObjectFactory.Configure(map =>
             {
-                map.For<IHistoryRenderer>().Use<HistoryRenderer>();
+                map.For<IPageRenderer>().Use<PageRenderer>();
                 map.For<IFileSystem>().Use<FileSystem>();
                 map.For<IRepoLoader>().Use<RepoLoader>();
             });
