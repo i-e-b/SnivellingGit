@@ -12,6 +12,8 @@ namespace SnivellingGit.Rendering
     /// </summary>
     public class PageRenderer : IPageRenderer
     {
+        private const string JsLink = "javascript:void(0)";
+
         /// <summary>
         /// Default false. If true, try to show a branch named 'Master' before all others, including 'HEAD'.
         /// To do: generalise this to any named branch
@@ -53,7 +55,7 @@ namespace SnivellingGit.Rendering
 
             controls.Add(T.g("p")["Currently checked out: ", T.g("span", "class","data")[repo.Head.CanonicalName]]);
 
-            // Retrieving status on large repos is slow -- this should get rolled out to an async call?
+            // Retrieving status on large repos is slow -- this should get rolled out to a separate async call?
             /*
             var status = repo.Index.RetrieveStatus();
             var fileStatus = T.g("div", "class", "floatBox")
@@ -78,8 +80,8 @@ namespace SnivellingGit.Rendering
             var actions = T.g("div", "class","floatBox")["Actions", T.g("br/")];
             actions.Add(GitActionLink("fetch-all", "Fetch all and prune"));
             if (HasSelectedNode()) {
-                actions.Add(T.g("a","href","javascript:void")["Checkout selected (headless)"], T.g("br/"));
-                actions.Add(T.g("a", "href", "?" + flags)["Select None"], T.g("br/"));
+                actions.Add(T.g("a","href",JsLink)["Checkout selected (headless)"], T.g("br/"));
+                actions.Add(T.g("a", "href", JsLink, "onclick", "svgElementClicked(null)")["Select None"], T.g("br/"));
             }
 
             controls.Add(actions);
@@ -111,7 +113,7 @@ namespace SnivellingGit.Rendering
 
         private static TagContent GitActionLink(string action, string text)
         {
-            return T.g()[T.g("a", "href", "javascript:void", "onclick", "gitAction('" + action + "')")[text], T.g("br/")];
+            return T.g()[T.g("a", "href", JsLink, "onclick", "gitAction('" + action + "')")[text], T.g("br/")];
         }
 
         private TagContent ShaLink(string flags, string sha, string text)

@@ -14,11 +14,13 @@ var QueryString = function () {
 
 // This function is triggered by the SVG script in "SvgEmbeddedScript.js"
 function svgElementClicked(e) {
-    if (e.id && e.id.length > 20) {
+    if (e && e.id && e.id.length > 20) {
         QueryString["show"] = e.id;
-        loadGraph();
-        loadHeaders();
+    } else {
+        delete QueryString.show;
     }
+    loadGraph();
+    loadHeaders();
 }
 
 // Read and replace the control headers
