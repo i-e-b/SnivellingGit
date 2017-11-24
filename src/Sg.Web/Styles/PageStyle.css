@@ -40,4 +40,4 @@ a, a:link, a:visited, a:hover, a:active {color: #000; text-decoration: underline
 #log { font-family: monospace; font-size: 11px; }
 .logSuccess { background:#afa; }
 .logFailure { background:#faa; }
-.floatBox { float: left; height: 100px; width:20%; overflow-y: scroll; overflow-x: auto; margin: 10px; padding: 10px; }
+.floatBox { float: left; height: 100px; width:20%; overflow-y: scroll; overflow-x: auto; margin: 0; padding: 10px; }

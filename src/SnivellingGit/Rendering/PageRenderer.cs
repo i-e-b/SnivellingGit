@@ -52,21 +52,11 @@ namespace SnivellingGit.Rendering
         public TagContent RenderControls(IRepository repo, string flags) {
             var controls = T.g();
 
-            controls.Add(T.g("p")["Currently checked out: ", T.g("span", "class","data")[repo.Head.CanonicalName]]);
-
-            // Retrieving status on large repos is slow -- this should get rolled out to a separate async call?
-            /*
-            var status = repo.Index.RetrieveStatus();
-            var fileStatus = T.g("div", "class", "floatBox")
-                [
-                    T.g("p")[
-                        "Working copy: ", T.g("span", "class", "data")[status.Added.Count() + " added, " + status.Removed.Count() + " deleted, " + status.Modified.Count() + " modified; " + status.Staged.Count() + " staged for next commit."]
-                    ],
-                    T.g("p")["Current interactive operation '" + repo.Info.CurrentOperation + "'"],
-                    T.g("p")["History contains " + HistoryWalker.SafeEnumerate(repo.Commits).Count() + " commits"]
-                ];
-            body.Add(fileStatus);
-            // */
+            var status = repo.RetrieveStatus();
+            controls.Add(T.g("p")["Currently checked out: ", T.g("span", "class", "data")[repo.Head.CanonicalName], T.g("br/"),
+                    "Working copy: ", T.g("span", "class", "data")[status.Added.Count() + " added, " + status.Removed.Count() + " deleted, " + status.Modified.Count() + " modified; " + status.Staged.Count() + " staged for next commit."], T.g("br/"),
+                    "Current interactive operation '" + repo.Info.CurrentOperation + "'"]
+                    );
 
             var branches = T.g("div", "class", "floatBox")["Branches",  T.g("br/")];
             branches.Add(repo.Branches.Select(b=>ShaLink(b.Tip.Sha, b.CanonicalName)));
