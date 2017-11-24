@@ -15,23 +15,27 @@ var QueryString = function () {
 // This function is triggered by the SVG script in "SvgEmbeddedScript.js"
 function svgElementClicked(e) {
     if (e && e.id && e.id.length > 20) {
-        QueryString["show"] = e.id;
+        selectCommit(e.id);
+    } else if (e == null) {
+        delete QueryString.show; // de-select
+        loadGraph();
+        loadHeaders();
     } else {
-        delete QueryString.show;
+        return; // a real click, but not on anything
     }
+}
+
+function selectCommit(shaId) {
+    QueryString["show"] = shaId;
     loadGraph();
     loadHeaders();
 }
 
 // Read and replace the control headers
-function loadHeaders() {
-    loadSelfReference("controlHost", "repo-controls");
-}
+function loadHeaders() { loadSelfReference("controlHost", "repo-controls"); }
 
 // Read and replace the SVG graph
-function loadGraph() {
-    loadSelfReference("svgroot", "render-svg");
-}
+function loadGraph() { loadSelfReference("svgroot", "render-svg"); }
 
 // Request a git command, populate the log and refresh the graph and headers
 function gitAction(actionCommand) {
@@ -54,7 +58,8 @@ function gitAction(actionCommand) {
 function loadSelfReference(targetElementId, request) {
     var xhttp = new XMLHttpRequest();
     xhttp.onreadystatechange = function () {
-        if (this.readyState === 4) {// && this.status === 200) {
+        if (this.readyState === 4) {
+            if (this.status !== 200) { console.dir(this); return; }
             document.getElementById(targetElementId).innerHTML = this.responseText;
         }
     };

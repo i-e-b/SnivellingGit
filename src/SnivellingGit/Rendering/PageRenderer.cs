@@ -12,7 +12,6 @@ namespace SnivellingGit.Rendering
     /// </summary>
     public class PageRenderer : IPageRenderer
     {
-        private const string JsLink = "javascript:void(0)";
 
         /// <summary>
         /// Default false. If true, try to show a branch named 'Master' before all others, including 'HEAD'.
@@ -70,18 +69,18 @@ namespace SnivellingGit.Rendering
             // */
 
             var branches = T.g("div", "class", "floatBox")["Branches",  T.g("br/")];
-            branches.Add(repo.Branches.Select(b=>ShaLink(flags, b.Tip.Sha, b.CanonicalName)));
+            branches.Add(repo.Branches.Select(b=>ShaLink(b.Tip.Sha, b.CanonicalName)));
             controls.Add(branches);
             
             var tags = T.g("div", "class", "floatBox")["Tags", T.g("br/")];
-            tags.Add(repo.Tags.OrderByDescending(t=>t.FriendlyName).Select(b=>ShaLink(flags, b.Target.Sha, b.CanonicalName)));
+            tags.Add(repo.Tags.OrderByDescending(t=>t.FriendlyName).Select(b=>ShaLink(b.Target.Sha, b.CanonicalName)));
             controls.Add(tags);
 
             var actions = T.g("div", "class","floatBox")["Actions", T.g("br/")];
             actions.Add(GitActionLink("fetch-all", "Fetch all and prune"));
             if (HasSelectedNode()) {
-                actions.Add(T.g("a","href",JsLink)["Checkout selected (headless)"], T.g("br/"));
-                actions.Add(T.g("a", "href", JsLink, "onclick", "svgElementClicked(null)")["Select None"], T.g("br/"));
+                actions.Add(T.g("a", JsLink("void(0)"))["Checkout selected (headless)"], T.g("br/"));
+                actions.Add(T.g("a", JsLink("svgElementClicked(null)"))["Select None"], T.g("br/"));
             }
 
             controls.Add(actions);
@@ -111,14 +110,19 @@ namespace SnivellingGit.Rendering
             return doc;
         }
 
-        private static TagContent GitActionLink(string action, string text)
-        {
-            return T.g()[T.g("a", "href", JsLink, "onclick", "gitAction('" + action + "')")[text], T.g("br/")];
+        
+        private static string[] JsLink (string function){
+            return new[] { "href", "javascript:" + function };
         }
 
-        private TagContent ShaLink(string flags, string sha, string text)
+        private static TagContent GitActionLink(string action, string text)
         {
-            return T.g("a", "href", "?"+flags+"&show="+sha)[text, T.g("br/")];
+            return T.g()[T.g("a", JsLink("gitAction('" + action + "')"))[text], T.g("br/")];
+        }
+
+        private TagContent ShaLink(string sha, string text)
+        {
+            return T.g("a", JsLink("selectCommit('"+sha+"')"))[text, T.g("br/")];
         }
 
         private bool HasSelectedNode()
