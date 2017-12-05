@@ -13,7 +13,8 @@ var QueryString = function () {
 }();
 
 // This function is triggered by the SVG script in "SvgEmbeddedScript.js"
-function svgElementClicked(e) {
+// e -> element clicked; btn -> mouse button pressed: 'left' or 'right'
+function svgElementClicked(e, btn) {
     if (e && e.id && e.id.length > 20) {
         selectCommit(e.id);
     } else if (e == null) {
@@ -21,7 +22,7 @@ function svgElementClicked(e) {
         loadGraph();
         loadHeaders();
     } else {
-        return; // a real click, but not on anything
+        return; // a real click, but not on anything interesting
     }
 }
 

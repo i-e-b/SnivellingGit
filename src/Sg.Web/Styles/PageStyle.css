@@ -15,8 +15,8 @@ path { stroke: #aaa; stroke-width: 1px; fill: none; }
 #arrow path { stroke: #000; stroke-width: 1px; fill: #000; }
 svg{border:none;overflow:visible}
 text { font-weight: 300; font-family: Helvetica, Arial, sans-serf; font-size: 10px; }
-.node rect { stroke-width: 2px; stroke: #333; fill: #fff; opacity: 1;}
-.merge circle { stroke-width: 2px; stroke: #bbb; fill: #fff; opacity: 1;}
+.node rect { stroke-width: 2px; stroke: #333; fill: #fff; opacity: 1; cursor:pointer;}
+.merge circle { stroke-width: 2px; stroke: #bbb; fill: #fff; opacity: 1; cursor:pointer;}
 
 /* HTML styles */
 p {font-size:12px;}

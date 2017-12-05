@@ -59,11 +59,11 @@ namespace SnivellingGit.Rendering
                     );
 
             var branches = T.g("div", "class", "floatBox")["Branches",  T.g("br/")];
-            branches.Add(repo.Branches.Select(b=>ShaLink(b.Tip.Sha, b.CanonicalName)));
+            branches.Add(repo.Branches.Select(b=>ShaLink(b.Tip.Sha, b.FriendlyName)));
             controls.Add(branches);
             
             var tags = T.g("div", "class", "floatBox")["Tags", T.g("br/")];
-            tags.Add(repo.Tags.OrderByDescending(t=>t.FriendlyName).Select(b=>ShaLink(b.Target.Sha, b.CanonicalName)));
+            tags.Add(repo.Tags.OrderByDescending(t=>t.FriendlyName).Select(b=>ShaLink(b.Target.Sha, b.FriendlyName)));
             controls.Add(tags);
 
             var actions = T.g("div", "class","floatBox")["Actions", T.g("br/")];
