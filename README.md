@@ -7,6 +7,7 @@ Remember to include a path to your target git directory (i.e. `C:\Work\MyProj` w
 
 ### Goals
 
+* Navigation when not in a git repo?
 * Move head (checkout)
 * Add files ; commit ; push
 * fetch ; merge (probably best as separate?)

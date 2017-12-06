@@ -23,28 +23,7 @@ namespace SnivellingGit.GitCommands
         /// </summary>
         public static bool FetchAllPrune(string repoPath, out string logs)
         {
-            using (var repo = ObjectFactory.GetInstance<IRepoLoader>().Load(repoPath))
-            {
-                if (repo == null) {
-                    logs = "Repository not found at path " + repoPath;
-                    return false;
-                }
-
-                using (var proc = new ProcessHost("git.exe", repo.Info.Path))
-                {
-                    Console.Write("Starting fetch");
-                    proc.Start("fetch --all --prune");
-                    proc.WaitForExit(TimeSpan.FromSeconds(30), out var code);
-
-                    logs = "git fetch --all --prune\n"
-                        + proc.StdOut.ReadAllText(Encoding.ASCII) + "\n"
-                        + proc.StdErr.ReadAllText(Encoding.ASCII);
-
-                    Console.WriteLine("...done");
-                    return code == 0;
-                }
-            }
-
+            return RunBasicCommand(repoPath, "fetch --all --prune", out logs);
         }
         
         /// <summary>
@@ -52,29 +31,7 @@ namespace SnivellingGit.GitCommands
         /// </summary>
         public static bool PullFastForward(string repoPath, out string logs)
         {
-            // TODO: de-duplicate between the git action methods
-            using (var repo = ObjectFactory.GetInstance<IRepoLoader>().Load(repoPath))
-            {
-                if (repo == null) {
-                    logs = "Repository not found at path " + repoPath;
-                    return false;
-                }
-
-                using (var proc = new ProcessHost("git.exe", repo.Info.WorkingDirectory))
-                {
-                    Console.Write("Starting fetch");
-                    proc.Start("pull --ff-only");
-                    proc.WaitForExit(TimeSpan.FromSeconds(30), out var code);
-
-                    logs = "git pull --ff-only\n"
-                           + proc.StdOut.ReadAllText(Encoding.ASCII) + "\n"
-                           + proc.StdErr.ReadAllText(Encoding.ASCII);
-
-                    Console.WriteLine("...done");
-                    return code == 0;
-                }
-            }
-
+            return RunBasicCommand(repoPath, "pull --ff-only", out logs);
         }
 
         /// <summary>
@@ -82,7 +39,10 @@ namespace SnivellingGit.GitCommands
         /// </summary>
         public static bool Checkout(string repoPath, string target, out string logs)
         {
-            // TODO: de-duplicate between the git action methods
+            return RunBasicCommand(repoPath, "checkout \""+target+"\"", out logs);
+        }
+
+        private static bool RunBasicCommand(string repoPath, string command, out string logs) {
             using (var repo = ObjectFactory.GetInstance<IRepoLoader>().Load(repoPath))
             {
                 if (repo == null) {
@@ -93,10 +53,10 @@ namespace SnivellingGit.GitCommands
                 using (var proc = new ProcessHost("git.exe", repo.Info.WorkingDirectory))
                 {
                     Console.Write("Starting fetch");
-                    proc.Start("checkout \""+target+"\"");
+                    proc.Start(command);
                     proc.WaitForExit(TimeSpan.FromSeconds(30), out var code);
 
-                    logs = "git checkout \""+target+"\"\n"
+                    logs = "git "+command+"\n"
                            + proc.StdOut.ReadAllText(Encoding.ASCII) + "\n"
                            + proc.StdErr.ReadAllText(Encoding.ASCII);
 
