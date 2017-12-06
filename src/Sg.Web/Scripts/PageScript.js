@@ -1,4 +1,6 @@
-﻿// Read query string into object
+﻿'use strict';
+
+// Read query string into object
 var QueryString = function () {
     if (!window.location.search || !window.location.search.substr(1)) return {};
 
@@ -34,7 +36,7 @@ function selectCommit(shaId) {
 
 // Read and replace the control headers
 function loadHeaders() {
-    var logBox = document.getElementById('log')
+    var logBox = document.getElementById('log');
     var logContent = logBox.innerHTML; // preserve existing log
     var logClass = logBox.className;
     loadSelfReference("controlHost", "repo-controls", function () {
@@ -45,7 +47,15 @@ function loadHeaders() {
 }
 
 // Read and replace the SVG graph
-function loadGraph() { loadSelfReference("svgroot", "render-svg"); }
+function loadGraph() {
+    loadSelfReference("svgroot", "render-svg", function () {
+        // resize the outer SVG to match the inner
+        var outer = document.getElementById('svgroot');
+        var inner = outer.getElementById('svgroot');
+        outer.setAttribute('width', inner.getAttribute('width'));
+        outer.setAttribute('height', inner.getAttribute('height'));
+    });
+}
 
 // Request a git command, populate the log and refresh the graph and headers
 function gitAction(actionCommand, target) {

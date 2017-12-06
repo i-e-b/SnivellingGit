@@ -50,43 +50,8 @@ namespace SnivellingGit.Rendering
         /// Render a set of repo-wide controls to sit above the history graph
         /// </summary>
         public TagContent RenderControls(IRepository repo, string flags) {
-            var controls = T.g();
-
-            var status = repo.RetrieveStatus();
-            controls.Add(T.g("p")["Currently checked out: ", T.g("span", "class", "data")[repo.Head.CanonicalName], T.g("br/"),
-                    "Working copy: ", T.g("span", "class", "data")[status.Added.Count() + " added, " + status.Removed.Count() + " deleted, " + status.Modified.Count() + " modified; " + status.Staged.Count() + " staged for next commit."], T.g("br/"),
-                    "Current interactive operation '" + repo.Info.CurrentOperation + "'"]
-                    );
-
-            var branches = T.g("div", "class", "floatBox")["Branches",  T.g("br/")];
-            branches.Add(repo.Branches.Select(b=>ShaLink(b.Tip.Sha, b.FriendlyName, GetLocalName(b))));
-            controls.Add(branches);
-            
-            var tags = T.g("div", "class", "floatBox")["Tags", T.g("br/")];
-            tags.Add(repo.Tags.OrderByDescending(t=>t.FriendlyName).Select(b=>ShaLink(b.Target.Sha, b.FriendlyName, b.FriendlyName)));
-            controls.Add(tags);
-
-            var actions = T.g("div", "class","floatBox")["Actions", T.g("br/")];
-            actions.Add(GitActionLink("fetch-all", "Fetch all and prune"));
-            if (HasSelectedNode()) {
-                actions.Add(JsLink("gitAction('checkout', '"+CommitIdToHilight+"')", "Checkout selected (headless)"), T.g("br/"));
-                actions.Add(JsLink("svgElementClicked(null)", "Select None"), T.g("br/"));
-            }
-
-            if (repo.Head.IsTracking && repo.Head.Tip.Sha != repo.Head.TrackedBranch.Tip.Sha) {
-                actions.Add(GitActionLink("pull-ff-only", "Update to tracking"), T.g("br/"));
-            }
-
-            controls.Add(actions);
-
-
-            controls.Add(T.g("div", "class", "floatBox")["Log output", T.g("br/"), T.g("div", "id", "log")]);
-            return controls;
-        }
-
-        private string GetLocalName(Branch branch)
-        {
-            return branch.IsRemote ? branch.FriendlyName.Replace(branch.RemoteName+"/", "") : branch.FriendlyName;
+            var controlRenderer = new ControlRenderer();
+            return controlRenderer.RenderControlBoxes(repo, CommitIdToHilight, flags);
         }
 
         /// <summary>
@@ -107,26 +72,6 @@ namespace SnivellingGit.Rendering
             body.Add(T.g("div", "id", "svgHost")[RenderSvgGraph(repo)]);
 
             return doc;
-        }
-
-        
-        private static TagContent JsLink (string function, string text){
-            return T.g("a", "href", "javascript:" + function)[text];
-        }
-
-        private static TagContent GitActionLink(string action, string text)
-        {
-            return T.g()[JsLink("gitAction('" + action + "')",text), T.g("br/")];
-        }
-
-        private TagContent ShaLink(string sha, string text, string checkoutName)
-        {
-            return T.g()[JsLink("gitAction('checkout', '"+checkoutName+"')", "➔"), T.g()["&nbsp;"], JsLink("selectCommit('" + sha + "')", text), T.g("br/")];
-        }
-
-        private bool HasSelectedNode()
-        {
-            return ! string.IsNullOrWhiteSpace(CommitIdToHilight);
         }
 
         /// <summary>

@@ -23,8 +23,9 @@ namespace SnivellingGit
         }
 
         /// <summary>
-        /// Load a repository given a rootless path.
-        /// <para>On *nix, all paths are rootless anyway. On Windows we need to guess something like C:\{requestedPath}</para>
+        /// Load a repository given a path with or without a drive spec.
+        /// <para>On *nix, there are no drive specs anyway. On Windows we need to guess something like C:\{requestedPath}</para>
+        /// This method will try to guess a /x/my/path input to be a X:\my\path output.
         /// </summary>
         public Repository Load(string requestedPath)
         {

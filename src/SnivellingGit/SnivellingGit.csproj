@@ -95,6 +95,7 @@
     <Compile Include="GitCommands\GitAction.cs" />
     <Compile Include="LayoutEngine\CommitGraph.cs" />
     <Compile Include="LayoutEngine\CommitPoint.cs" />
+    <Compile Include="Rendering\ControlRenderer.cs" />
     <Compile Include="Rendering\PageRenderer.cs" />
     <Compile Include="LayoutEngine\GraphCell.cs" />
     <Compile Include="LayoutEngine\HistoryWalker.cs" />
