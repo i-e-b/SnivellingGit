@@ -34,6 +34,7 @@ namespace Sg.Web
             var repoPath = request.Url.AbsolutePath;
             var settings = request.QueryString;
             var command = settings["command"];
+            var target = settings["target"];
 
             if (repoPath == "/favicon.ico")
             {
@@ -44,6 +45,12 @@ namespace Sg.Web
             switch (command) {
                 case "fetch-all":
                     return HandleAction(GitAction.FetchAllPrune, repoPath, response);
+
+                case "pull-ff-only":
+                    return HandleAction(GitAction.PullFastForward, repoPath, response);
+
+                case "checkout":
+                    return HandleAction(GitAction.Checkout, target, repoPath, response);
 
                 case "render-svg":
                     return WriteSvgGraph(response, repoPath, settings);
@@ -59,6 +66,13 @@ namespace Sg.Web
         private static string HandleAction(GitAction.GeneralAction action, string repoPath, HttpListenerResponse response)
         {
             var ok = action(repoPath, out var logs);
+            if (!ok) response.StatusCode = 500;
+            return logs.Replace("\n", "<br/>");
+        }
+
+        private static string HandleAction(GitAction.TargetAction action, string target, string repoPath, HttpListenerResponse response)
+        {
+            var ok = action(repoPath, target, out var logs);
             if (!ok) response.StatusCode = 500;
             return logs.Replace("\n", "<br/>");
         }

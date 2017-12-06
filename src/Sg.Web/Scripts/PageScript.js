@@ -13,8 +13,8 @@ var QueryString = function () {
 }();
 
 // This function is triggered by the SVG script in "SvgEmbeddedScript.js"
-// e -> element clicked; btn -> mouse button pressed: 'left' or 'right'
-function svgElementClicked(e, btn) {
+// e -> element clicked; btn -> mouse button pressed: 'left' or 'right'; loc -> {x,y} on page where the click happened
+function svgElementClicked(e, btn, loc) {
     if (e && e.id && e.id.length > 20) {
         selectCommit(e.id);
     } else if (e == null) {
@@ -33,13 +33,22 @@ function selectCommit(shaId) {
 }
 
 // Read and replace the control headers
-function loadHeaders() { loadSelfReference("controlHost", "repo-controls"); }
+function loadHeaders() {
+    var logBox = document.getElementById('log')
+    var logContent = logBox.innerHTML; // preserve existing log
+    var logClass = logBox.className;
+    loadSelfReference("controlHost", "repo-controls", function () {
+        var newLog = document.getElementById('log');
+        newLog.innerHTML = logContent;
+        newLog.className = logClass;
+    });
+}
 
 // Read and replace the SVG graph
 function loadGraph() { loadSelfReference("svgroot", "render-svg"); }
 
 // Request a git command, populate the log and refresh the graph and headers
-function gitAction(actionCommand) {
+function gitAction(actionCommand, target) {
     var logBox = document.getElementById('log');
     var xhttp = new XMLHttpRequest();
     xhttp.onreadystatechange = function () {
@@ -48,20 +57,26 @@ function gitAction(actionCommand) {
             logBox.innerHTML = this.responseText;
 
             loadGraph();
+            loadHeaders();
         }
     };
     logBox.className = "";
     logBox.innerHTML = "Processing";
-    xhttp.open("GET", "?command=" + actionCommand, true);
+    if (target) {
+        xhttp.open("GET", "?command=" + actionCommand + "&target=" + target, true);
+    } else {
+        xhttp.open("GET", "?command=" + actionCommand, true);
+    }
     xhttp.send();
 }
 
-function loadSelfReference(targetElementId, request) {
+function loadSelfReference(targetElementId, request, actionOnDone) {
     var xhttp = new XMLHttpRequest();
     xhttp.onreadystatechange = function () {
         if (this.readyState === 4) {
             if (this.status !== 200) { console.dir(this); return; }
             document.getElementById(targetElementId).innerHTML = this.responseText;
+            if (actionOnDone) actionOnDone();
         }
     };
     xhttp.open("GET", queryString({command:request}), true);

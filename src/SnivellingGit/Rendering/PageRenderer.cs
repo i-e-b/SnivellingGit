@@ -59,18 +59,22 @@ namespace SnivellingGit.Rendering
                     );
 
             var branches = T.g("div", "class", "floatBox")["Branches",  T.g("br/")];
-            branches.Add(repo.Branches.Select(b=>ShaLink(b.Tip.Sha, b.FriendlyName)));
+            branches.Add(repo.Branches.Select(b=>ShaLink(b.Tip.Sha, b.FriendlyName, GetLocalName(b))));
             controls.Add(branches);
             
             var tags = T.g("div", "class", "floatBox")["Tags", T.g("br/")];
-            tags.Add(repo.Tags.OrderByDescending(t=>t.FriendlyName).Select(b=>ShaLink(b.Target.Sha, b.FriendlyName)));
+            tags.Add(repo.Tags.OrderByDescending(t=>t.FriendlyName).Select(b=>ShaLink(b.Target.Sha, b.FriendlyName, b.FriendlyName)));
             controls.Add(tags);
 
             var actions = T.g("div", "class","floatBox")["Actions", T.g("br/")];
             actions.Add(GitActionLink("fetch-all", "Fetch all and prune"));
             if (HasSelectedNode()) {
-                actions.Add(T.g("a", JsLink("void(0)"))["Checkout selected (headless)"], T.g("br/"));
-                actions.Add(T.g("a", JsLink("svgElementClicked(null)"))["Select None"], T.g("br/"));
+                actions.Add(JsLink("gitAction('checkout', '"+CommitIdToHilight+"')", "Checkout selected (headless)"), T.g("br/"));
+                actions.Add(JsLink("svgElementClicked(null)", "Select None"), T.g("br/"));
+            }
+
+            if (repo.Head.IsTracking && repo.Head.Tip.Sha != repo.Head.TrackedBranch.Tip.Sha) {
+                actions.Add(GitActionLink("pull-ff-only", "Update to tracking"), T.g("br/"));
             }
 
             controls.Add(actions);
@@ -78,6 +82,11 @@ namespace SnivellingGit.Rendering
 
             controls.Add(T.g("div", "class", "floatBox")["Log output", T.g("br/"), T.g("div", "id", "log")]);
             return controls;
+        }
+
+        private string GetLocalName(Branch branch)
+        {
+            return branch.IsRemote ? branch.FriendlyName.Replace(branch.RemoteName+"/", "") : branch.FriendlyName;
         }
 
         /// <summary>
@@ -101,18 +110,18 @@ namespace SnivellingGit.Rendering
         }
 
         
-        private static string[] JsLink (string function){
-            return new[] { "href", "javascript:" + function };
+        private static TagContent JsLink (string function, string text){
+            return T.g("a", "href", "javascript:" + function)[text];
         }
 
         private static TagContent GitActionLink(string action, string text)
         {
-            return T.g()[T.g("a", JsLink("gitAction('" + action + "')"))[text], T.g("br/")];
+            return T.g()[JsLink("gitAction('" + action + "')",text), T.g("br/")];
         }
 
-        private TagContent ShaLink(string sha, string text)
+        private TagContent ShaLink(string sha, string text, string checkoutName)
         {
-            return T.g("a", JsLink("selectCommit('"+sha+"')"))[text, T.g("br/")];
+            return T.g()[JsLink("gitAction('checkout', '"+checkoutName+"')", "➔"), T.g()["&nbsp;"], JsLink("selectCommit('" + sha + "')", text), T.g("br/")];
         }
 
         private bool HasSelectedNode()

@@ -14,6 +14,10 @@ namespace SnivellingGit.GitCommands
         /// <summary> Delegate for actions which don't take arguments </summary>
         public delegate bool GeneralAction(string repoPath, out string logs);
 
+        
+        /// <summary> Delegate for actions which take a single argument </summary>
+        public delegate bool TargetAction(string repoPath, string target, out string logs);
+
         /// <summary>
         /// Fetch commits from all remotes, prune remotely deleted branches
         /// </summary>
@@ -42,6 +46,64 @@ namespace SnivellingGit.GitCommands
             }
 
         }
+        
+        /// <summary>
+        /// Do a pull with fast-forward only flag set
+        /// </summary>
+        public static bool PullFastForward(string repoPath, out string logs)
+        {
+            // TODO: de-duplicate between the git action methods
+            using (var repo = ObjectFactory.GetInstance<IRepoLoader>().Load(repoPath))
+            {
+                if (repo == null) {
+                    logs = "Repository not found at path " + repoPath;
+                    return false;
+                }
 
+                using (var proc = new ProcessHost("git.exe", repo.Info.WorkingDirectory))
+                {
+                    Console.Write("Starting fetch");
+                    proc.Start("pull --ff-only");
+                    proc.WaitForExit(TimeSpan.FromSeconds(30), out var code);
+
+                    logs = "git pull --ff-only\n"
+                           + proc.StdOut.ReadAllText(Encoding.ASCII) + "\n"
+                           + proc.StdErr.ReadAllText(Encoding.ASCII);
+
+                    Console.WriteLine("...done");
+                    return code == 0;
+                }
+            }
+
+        }
+
+        /// <summary>
+        /// Checkout a name
+        /// </summary>
+        public static bool Checkout(string repoPath, string target, out string logs)
+        {
+            // TODO: de-duplicate between the git action methods
+            using (var repo = ObjectFactory.GetInstance<IRepoLoader>().Load(repoPath))
+            {
+                if (repo == null) {
+                    logs = "Repository not found at path " + repoPath;
+                    return false;
+                }
+
+                using (var proc = new ProcessHost("git.exe", repo.Info.WorkingDirectory))
+                {
+                    Console.Write("Starting fetch");
+                    proc.Start("checkout \""+target+"\"");
+                    proc.WaitForExit(TimeSpan.FromSeconds(30), out var code);
+
+                    logs = "git checkout \""+target+"\"\n"
+                           + proc.StdOut.ReadAllText(Encoding.ASCII) + "\n"
+                           + proc.StdErr.ReadAllText(Encoding.ASCII);
+
+                    Console.WriteLine("...done");
+                    return code == 0;
+                }
+            }
+        }
     }
 }
