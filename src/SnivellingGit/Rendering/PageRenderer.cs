@@ -12,7 +12,6 @@ namespace SnivellingGit.Rendering
     /// </summary>
     public class PageRenderer : IPageRenderer
     {
-
         /// <summary>
         /// Default false. If true, try to show a branch named 'Master' before all others, including 'HEAD'.
         /// To do: generalise this to any named branch
@@ -40,6 +39,7 @@ namespace SnivellingGit.Rendering
         public TagContent RenderSvgGraph(IRepository repo)
         {
             ICommitGraph table = new ColumnsCommitGraph();
+            // TODO: Cache the commit graph for a given repo until we do a git action on it. This is the slowest thing we do in Sg
             HistoryWalker.BuildCommitGraph(repo, table, OnlyLocal, AlwaysShowMasterFirst);
 
             var svgRenderer = new SvgRenderer { HideComplexHistory = HideComplexHistory };

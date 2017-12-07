@@ -251,6 +251,7 @@ namespace SnivellingGit.Rendering
             var min = Math.Min(rowA, rowB);
             var max = Math.Max(rowA, rowB);
 
+            // TODO: this is really slow now and needs to be refactored
             // this is getting called quite a lot. Probably good to look at a more optimal storage
             return allCells.Any(c => c.Column == column && c.Row >= min && c.Row <= max && c.Row != rowB && c.Row != rowA);
         }
