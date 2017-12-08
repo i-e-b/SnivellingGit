@@ -32,9 +32,21 @@ namespace SnivellingGit.LayoutEngine
         /// </summary>
         static string MakeCssColour(string name)
         {
-            var proposed = name.GetHashCode().ToString("X").Substring(0, 3);
+            var proposed = ColorHash(name).ToString("X3");
             if (proposed == "FFF") proposed = "CA9";
+            if (proposed == "000") proposed = "9CA";
             return proposed;
+        }
+
+        private static uint ColorHash(string str)
+        {
+            const int mod = 65521;
+            uint a = 1, b = 0;
+            foreach (char c in str) {
+                a = (a + c) % mod;
+                b = (b ^ a) % mod;
+            }
+            return (a*b) % 0x1000;
         }
 
         /// <summary>
