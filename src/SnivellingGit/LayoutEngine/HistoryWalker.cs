@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using LibGit2Sharp;
 using SnivellingGit.Interfaces;
 
@@ -46,14 +45,16 @@ namespace SnivellingGit.LayoutEngine
             if (AlwaysShowMasterFirst && master != null)
             {
                 var masterTide = GetTide(master);
-                foreach (var commit in SafeEnumerate(master.Commits))
+                var masterIter = HistoryCache.StartFrom(master.Tip);
+                foreach (var commit in masterIter)
                 {
                     if (table.AddCommit(CommitPoint.FromGitCommit(commit), "master", masterTide)) break;
                 }
             }
 
             var headTide = GetTide(repo.Head);
-            foreach (var commit in SafeEnumerate(repo.Head.Commits))
+            var headIter = HistoryCache.StartFrom(repo.Head.Tip);
+            foreach (var commit in headIter)
             {
                 if (table.AddCommit(CommitPoint.FromGitCommit(commit), "Head", headTide)) break;
             }
@@ -64,39 +65,13 @@ namespace SnivellingGit.LayoutEngine
                 if (branch.IsCurrentRepositoryHead) continue;
                 if (branch.FriendlyName == "master" && AlwaysShowMasterFirst) continue;
 
-
                 var tide = GetTide(branch);
-                foreach (var commit in SafeEnumerate(branch.Commits))
-                {
-                    if (!table.Seen(commit.Sha))
-                    {
-                        table.AddCommit(CommitPoint.FromGitCommit(commit), branch.FriendlyName, tide);
-                    }
-                }
 
-            }
-        }
-        
-
-        /// <summary>
-        /// Yield results until any kind of failure, then stop.
-        /// </summary>
-        public static IEnumerable<T> SafeEnumerate<T>(IEnumerable<T> commits)
-        {
-            using (var e = commits.GetEnumerator())
-            {
-                for (;;)
+                var iter = HistoryCache.StartFrom(branch.Tip);
+                foreach (var commit in iter)
                 {
-                    try
-                    {
-                        if (!e.MoveNext()) yield break;
-                    }
-                    catch (Exception ex)
-                    {
-                        Console.WriteLine(ex);
-                        yield break;
-                    }
-                    yield return e.Current;
+                    var cp = CommitPoint.FromGitCommit(commit);
+                    table.AddCommit(cp, branch.FriendlyName, tide);
                 }
             }
         }

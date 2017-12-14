@@ -1,4 +1,5 @@
 *.vspx
+*.vsp
 .vs/
 *.psess
 /packages

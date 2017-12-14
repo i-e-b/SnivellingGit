@@ -5,6 +5,10 @@ An experimental GUI for the Git SCM.
 To use, run the Sg.Web self-host exe, and then load the stated Url in your browser.
 Remember to include a path to your target git directory (i.e. `C:\Work\MyProj` would need a url of `http://localhost:8080/Work/MyProj`)
 
+### To do
+
+* caching for history (basic would be to cache everything, advanced would be to cache behind a tide line -- stop enumerating as soon as we see a known parent)
+
 ### Goals
 
 * Navigation when not in a git repo?
@@ -15,6 +19,7 @@ Remember to include a path to your target git directory (i.e. `C:\Work\MyProj` w
 * show / hide unmerged remote branches (plus fetch all)
 * Change visualisation settings:
   - flattened history by default (only unmerged branches spread out, how it is now); Ancestry trace for indiviual commits (like gitk does); Per contributor display (column per person).
+* git reflog explorer and recovery tool (open a new branch for a given sha)
 * option to attribute-tag the last commit before a merge to show branch history?
 
 ### Implementation details

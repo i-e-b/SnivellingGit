@@ -133,7 +133,7 @@ namespace Sg.Web
 
         private static string NoSuchRepoPage(string repoPath)
         {
-            // TODO: a navigation page from here
+            // TODO: a navigation page from here?
             var sb = new StringBuilder();
             sb.Append("<html><head><title>Not Found</title></head><body>");
             sb.Append("<h1>Not found</h1>");
