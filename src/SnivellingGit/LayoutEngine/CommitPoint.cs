@@ -41,9 +41,10 @@ namespace SnivellingGit.LayoutEngine
         private static uint ColorHash(string str)
         {
             const int mod = 65521;
-            uint a = 1, b = 0;
+            uint a = 341, b = 682;
             foreach (char c in str) {
-                a = (a + c) % mod;
+                if (!char.IsLetterOrDigit(c)) continue;
+                a = (a + char.ToLowerInvariant(c)) % mod;
                 b = (b ^ a) % mod;
             }
             return (a*b) % 0x1000;
