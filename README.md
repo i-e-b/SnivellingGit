@@ -7,14 +7,15 @@ Remember to include a path to your target git directory (i.e. `C:\Work\MyProj` w
 
 ### To do
 
-* caching for history (basic would be to cache everything, advanced would be to cache behind a tide line -- stop enumerating as soon as we see a known parent)
 
 ### Goals
 
 * Navigation when not in a git repo?
 * Move head (checkout)
+* New branch on selected commit (checkout -b)
 * Add files ; commit ; push
 * fetch ; merge (probably best as separate?)
+* rebase ; solve merge conflicts?
 * stashes -- both loose on a shelf, and as 'fake commits' to allow moving head without losing work (stage and index as needed, with coded stash names?)
 * show / hide unmerged remote branches (plus fetch all)
 * Change visualisation settings:
