@@ -55,10 +55,15 @@ namespace SnivellingGit.Rendering
             var rightMostColumnX = cellX(cells.Select(c => c.Column).Max() + 1);
             var rightMostNodeEdge = rightMostColumnX + 10;
             var rightMostEdgeOfSvg = rightMostNodeEdge;
+            var bottomEdge = 0;
 
             foreach (var cell in cells)
             {
-                if (rowLimit-- == 0) break;
+                if (rowLimit-- == 0) { // draw an indication that history continues
+                    content.Add(CommitMessage(rightMostNodeEdge, cellY(cell.Row), "fade", "History continues (row limit reached)"));
+                    bottomEdge = cellY(cell.Row + 1);
+                    break;
+                }
 
                 var styleClass = "";
                 if (cell.CommitPoint.Id == hiliteSha) styleClass += "blink ";
@@ -77,6 +82,7 @@ namespace SnivellingGit.Rendering
                 // Draw commit message
                 content.Add(CommitMessage(rightMostNodeEdge, cellY(cell.Row), styleClass, cell.CommitPoint.Message));
                 rightMostEdgeOfSvg = Math.Max(rightMostEdgeOfSvg, rightMostNodeEdge + GuessStringWidth(10, cell.CommitPoint.Message));
+                bottomEdge = cellY(cell.Row + 1);
 
                 // Draw tags and branch names
                 if (cell.BranchNames.Any())
@@ -87,7 +93,7 @@ namespace SnivellingGit.Rendering
                 }
             }
 
-            var svgDoc = SvgHeader(rightMostEdgeOfSvg + 25, cellY(cells.Length) + 25, out var svgRoot);
+            var svgDoc = SvgHeader(rightMostEdgeOfSvg + 25, bottomEdge + 25, out var svgRoot);
             svgRoot.Add(content);
             return svgDoc;
         }

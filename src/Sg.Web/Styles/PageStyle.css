@@ -5,6 +5,7 @@
 .line {border-left: 2px solid #aaa;height: 16px;margin-left: 11px;margin-right: 11px;}
 
 .prune { fill:#f00; }
+.fade { fill:#777; }
 .headCell { fill: #5b5; font-weight: bold; font-size: 11px; }
 .tag path { stroke: #333; stroke-width: 1px; fill: none; opacity: 0.5; }
 .cmplx path { stroke: #000; stroke-width: 1px; fill: none;  opacity: 0.2;}
