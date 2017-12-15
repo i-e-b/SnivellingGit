@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System.Collections;
+using System.Collections.Generic;
 using SnivellingGit.LayoutEngine;
 
 namespace SnivellingGit.Interfaces
@@ -46,5 +47,11 @@ namespace SnivellingGit.Interfaces
         /// Return true if the commit is already registered
         /// </summary>
         bool Seen(string commitSha);
+
+        /// <summary>
+        /// Returns a dictionary of column => array; where the array contains an entry for every row, and
+        /// contains true only where that position is occupied
+        /// </summary>
+        IDictionary<int, BitArray> CellOccupancy();
     }
 }

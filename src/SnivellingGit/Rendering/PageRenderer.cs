@@ -42,7 +42,7 @@ namespace SnivellingGit.Rendering
             HistoryWalker.BuildCommitGraph(repo, table, OnlyLocal, AlwaysShowMasterFirst);
 
             var svgRenderer = new SvgRenderer { HideComplexHistory = HideComplexHistory };
-            return svgRenderer.RenderCommitGraphToSvg(table, CommitIdToHilight, rowLimit:500);
+            return svgRenderer.RenderCommitGraphToSvg(table, CommitIdToHilight, rowLimit:1500);
         }
 
         /// <summary>

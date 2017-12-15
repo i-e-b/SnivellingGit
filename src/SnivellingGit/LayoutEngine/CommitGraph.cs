@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using SnivellingGit.Interfaces;
@@ -30,7 +31,8 @@ namespace SnivellingGit.LayoutEngine
         readonly Dictionary<string, List<string>> _refs = new Dictionary<string, List<string>>();
         readonly HashSet<string> _seenNodes = new HashSet<string>();
 
-        GraphCell[] cellLayoutSet;
+        GraphCell[] cellLayoutSet; // last layout of cells created
+        IDictionary<int, BitArray> cellOccupancy; // cell placement lookup
 
         /// <summary>
         /// Add a commit. Must be added in child->parent->g.parent order.
@@ -60,42 +62,6 @@ namespace SnivellingGit.LayoutEngine
             return false;
         }
 
-        void AddNode(CommitPoint commit, string sourceRefName, bool tideCrossed)
-        {
-            if (!_refColumns.ContainsKey(sourceRefName)) _refColumns.Add(sourceRefName, _refColumns.Count);
-
-            _cells.Add(commit.Id, new GraphCell
-            {
-                BranchNames = LookupOrEmpty(_refs, commit.Id),
-                RefLine = sourceRefName,
-                CommitPoint = commit,
-                IsMerge = commit.Parents.Length > 1,
-                LocalOnly = !tideCrossed,
-                IsPrunable = _prunableRefs.Contains(commit.Id)
-            });
-        }
-
-        static IEnumerable<string> LookupOrEmpty(IReadOnlyDictionary<string, List<string>> refs, string id)
-        {
-            if (!refs.ContainsKey(id)) return new string[0];
-            return refs[id];
-        }
-
-        bool SeenTide(string sourceRefName, string remoteTide, string id)
-        {
-            if (!_refTides.ContainsKey(sourceRefName)) _refTides.Add(sourceRefName, false);
-            if (id == remoteTide) _refTides[sourceRefName] = true;
-            return _refTides[sourceRefName];
-        }
-
-        void AddEdge(string childId, string parentId)
-        {
-            if (!parentToChildren.ContainsKey(parentId)) parentToChildren.Add(parentId, new HashSet<string>());
-            if (!childToParents.ContainsKey(childId)) childToParents.Add(childId, new HashSet<string>());
-            parentToChildren[parentId].Add(childId);
-            childToParents[childId].Add(parentId);
-        }
-
         /// <summary>
         /// Add a remote reference. These are branches that shouldn't get their own column.
         /// All references should be added before adding commits.
@@ -113,20 +79,12 @@ namespace SnivellingGit.LayoutEngine
             if (string.IsNullOrWhiteSpace(commitId)) return;
             _prunableRefs.Add(commitId);
         }
-
-        static void SafeAdd(IDictionary<string, List<string>> refs, string tip, string name)
-        {
-            if (!refs.ContainsKey(tip))
-            {
-                refs.Add(tip, new List<string>());
-            }
-            if (!refs[tip].Contains(name)) refs[tip].Add(name);
-        }
         
         /// <summary>
         /// Layout the rows and columns for the current set of commit cells.
         /// </summary>
         public void DoLayout(string primaryReference) {
+            cellOccupancy = null;
             var cellSet = _cells.Values.OrderByDescending(c => c.CommitPoint.Date).ToArray();
             var cellLookup = _cells.Values.ToDictionary(c => c.CommitPoint.Id);
             
@@ -190,8 +148,79 @@ namespace SnivellingGit.LayoutEngine
             return cellLayoutSet;
         }
 
+        /// <summary>
+        /// Returns a dictionary of column => array; where the array contains an entry for every row, and
+        /// contains true only where that position is occupied
+        /// </summary>
+        public IDictionary<int, BitArray> CellOccupancy()
+        {
+            if (cellOccupancy != null) return cellOccupancy;
+
+            cellOccupancy = new Dictionary<int, BitArray>();
+            var cells = Cells().ToArray();
+            var rowCount = cells.Length;
+            var colCount = _refColumns.Count;
+
+            for (int i = 0; i < colCount; i++)
+            {
+                cellOccupancy.Add(i, new BitArray(rowCount, false));
+            }
+
+            foreach (var cell in cells)
+            {
+                cellOccupancy[cell.Column].Set(cell.Row, true);
+            }
+
+            return cellOccupancy;
+        }
+
+        void AddNode(CommitPoint commit, string sourceRefName, bool tideCrossed)
+        {
+            if (!_refColumns.ContainsKey(sourceRefName)) _refColumns.Add(sourceRefName, _refColumns.Count);
+
+            _cells.Add(commit.Id, new GraphCell
+            {
+                BranchNames = LookupOrEmpty(_refs, commit.Id),
+                RefLine = sourceRefName,
+                CommitPoint = commit,
+                IsMerge = commit.Parents.Length > 1,
+                LocalOnly = !tideCrossed,
+                IsPrunable = _prunableRefs.Contains(commit.Id)
+            });
+        }
+
+        static IEnumerable<string> LookupOrEmpty(IReadOnlyDictionary<string, List<string>> refs, string id)
+        {
+            if (!refs.ContainsKey(id)) return new string[0];
+            return refs[id];
+        }
+
+        bool SeenTide(string sourceRefName, string remoteTide, string id)
+        {
+            if (!_refTides.ContainsKey(sourceRefName)) _refTides.Add(sourceRefName, false);
+            if (id == remoteTide) _refTides[sourceRefName] = true;
+            return _refTides[sourceRefName];
+        }
+
+        void AddEdge(string childId, string parentId)
+        {
+            if (!parentToChildren.ContainsKey(parentId)) parentToChildren.Add(parentId, new HashSet<string>());
+            if (!childToParents.ContainsKey(childId)) childToParents.Add(childId, new HashSet<string>());
+            parentToChildren[parentId].Add(childId);
+            childToParents[childId].Add(parentId);
+        }
+
+        static void SafeAdd(IDictionary<string, List<string>> refs, string tip, string name)
+        {
+            if (!refs.ContainsKey(tip))
+            {
+                refs.Add(tip, new List<string>());
+            }
+            if (!refs[tip].Contains(name)) refs[tip].Add(name);
+        }
+
         // set the ref-line's max to the greatest of: cell row, existing value, parent's row
-        private void UpdateMaxBranch(Dictionary<string, int> maxBranch, GraphCell cell)
+        void UpdateMaxBranch(Dictionary<string, int> maxBranch, GraphCell cell)
         {
             if ( ! maxBranch.ContainsKey(cell.RefLine)) maxBranch.Add(cell.RefLine, cell.Row);
 
@@ -202,7 +231,7 @@ namespace SnivellingGit.LayoutEngine
             maxBranch[cell.RefLine] = Math.Max(Math.Max(parentMax, existing), cell.Row);
         }
 
-        private int MaxOrDefault(int defaultValue, IEnumerable<int> list)
+        int MaxOrDefault(int defaultValue, IEnumerable<int> list)
         {
             if (list == null) return defaultValue;
             return list.Concat(new[] {defaultValue}).Max();

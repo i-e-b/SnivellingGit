@@ -68,7 +68,7 @@ namespace SnivellingGit.LayoutEngine
 
             var leftEdge = 0;
             var rightEdge = 0;
-            for (int i = min; i <= max; i++)
+            for (int i = min + 1; i < max; i++)
             {
                 leftEdge = Math.Max(leftEdge, left[i]);
                 rightEdge = Math.Max(rightEdge, right[i]);

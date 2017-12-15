@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using SnivellingGit.Interfaces;
@@ -47,8 +48,8 @@ namespace SnivellingGit.Rendering
             Func<int, int> labelX = col => finalPlacement.CumulativeWidth(col, cellmarginw, loopSpacing);
 
             // Draw branch lines (overdrawn by nodes)
-            DrawAncestryLines(rowLimit, finalPlacement, cells, cellX, cellY); // dummy run to get final positions. Maybe: separate line decisions from writing?
-            content.Add(DrawAncestryLines(rowLimit, loops, cells, cellX, cellY));
+            DrawAncestryLines(rowLimit, finalPlacement, table, cellX, cellY); // dummy run to get final positions. Maybe: separate line decisions from writing?
+            content.Add(DrawAncestryLines(rowLimit, loops, table, cellX, cellY));
 
             
             var rightMostColumnX = cellX(cells.Select(c => c.Column).Max() + 1);
@@ -156,19 +157,20 @@ namespace SnivellingGit.Rendering
             ];
         }
 
-
-        private List<TagContent> DrawAncestryLines(int rowLimit, LoopPlacer loops, ICollection<GraphCell> cells, Func<int, int> cellX, Func<int, int> cellY)
+        private List<TagContent> DrawAncestryLines(int rowLimit, LoopPlacer loops, ICommitGraph graph, Func<int, int> cellX, Func<int, int> cellY)
         {
             var outp = new List<TagContent>();
+            var cells = graph.Cells();
+            var occupancy = graph.CellOccupancy();
             foreach (var cell in cells) // increasing row number
             {
                 if (rowLimit-- == 0) { break; }
 
                 foreach (var child in cell.ChildCells) // increasing row number
                 {
-                    var complex = !HideComplexHistory && AreCellsBetween(cells, cell.Column, cell.Row, child.Row);
+                    var complex = !HideComplexHistory && AreCellsBetween(occupancy, cell.Column, cell.Row, child.Row);
 
-                    outp.Add(ConnectCells(loops, cells, child, cell, cellX, cellY, complex));
+                    outp.Add(ConnectCells(loops, graph, child, cell, cellX, cellY, complex));
                 }
             }
             return outp;
@@ -177,11 +179,11 @@ namespace SnivellingGit.Rendering
         /// <summary>
         /// Draw lines between two cells. Only to be used by DrawAncestryLines
         /// </summary>
-        private TagContent ConnectCells(LoopPlacer loops, ICollection<GraphCell>  allCells, GraphCell child, GraphCell parent, Func<int, int> cellX, Func<int, int> cellY, bool complex)
+        private TagContent ConnectCells(LoopPlacer loops, ICommitGraph graph, GraphCell child, GraphCell parent, Func<int, int> cellX, Func<int, int> cellY, bool complex)
         {
             if (child.Column != parent.Column) // an unmerged branch
             {
-                return DrawDirectBranchingLine(allCells, child, parent, cellX, cellY);
+                return DrawDirectBranchingLine(graph, child, parent, cellX, cellY);
             }
             if (!complex || HideComplexHistory) // simple inheritance
             {
@@ -195,8 +197,7 @@ namespace SnivellingGit.Rendering
             }
         }
 
-
-        private TagContent DrawDirectBranchingLine(ICollection<GraphCell> allCells, GraphCell child, GraphCell parent, Func<int, int> cellX, Func<int, int> cellY)
+        private TagContent DrawDirectBranchingLine(ICommitGraph graph, GraphCell child, GraphCell parent, Func<int, int> cellX, Func<int, int> cellY)
         {
             // Try and stop weird merges from making unreadable paths:
             // 1) if steps across > steps up, do a straight line
@@ -204,10 +205,11 @@ namespace SnivellingGit.Rendering
             // 3) if there are no cells in the parent column between parent and child, use a top crook line (goes up before across)
             // 4) else use a straight line
 
+            var occupancy = graph.CellOccupancy();
             var stepsAcross = Math.Abs(parent.Column - child.Column);
             var stepsUp = Math.Abs(parent.Row - child.Row);
-            var childColObscured = AreCellsBetween(allCells, child.Column, parent.Row, child.Row);
-            var parentColObscured = AreCellsBetween(allCells, parent.Column, child.Row, parent.Row);
+            var childColObscured = AreCellsBetween(occupancy, child.Column, parent.Row, child.Row);
+            var parentColObscured = AreCellsBetween(occupancy, parent.Column, child.Row, parent.Row);
 
             // bottom crook:
             var bcx = cellX(child.Column);
@@ -246,14 +248,17 @@ namespace SnivellingGit.Rendering
                 cellX(child.Column), cellY(child.Row));
         }
 
-        private bool AreCellsBetween(ICollection<GraphCell> allCells, int column, int rowA, int rowB)
+        private bool AreCellsBetween(IDictionary<int, BitArray> occupancy, int column, int rowA, int rowB)
         {
             var min = Math.Min(rowA, rowB);
             var max = Math.Max(rowA, rowB);
 
-            // TODO: this is really slow now and needs to be refactored
-            // this is getting called quite a lot. Probably good to look at a more optimal storage
-            return allCells.Any(c => c.Column == column && c.Row >= min && c.Row <= max && c.Row != rowB && c.Row != rowA);
+            var field = occupancy[column];
+            for (int i = min+1; i < max; i++)
+            {
+                if (field[i]) return true;
+            }
+            return false;
         }
 
         private static TagContent DrawLoop(bool left, int depth, int x, int y1, int y2)
