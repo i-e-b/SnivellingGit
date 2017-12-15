@@ -20,6 +20,8 @@ namespace SnivellingGit.LayoutEngine
                 return;
             }
 
+            var cache = HistoryCache.For(repo);
+
             table.AddReference("HEAD", repo.Head.Tip.Sha);
             foreach (var branchRef in repo.Branches)
             {
@@ -45,7 +47,7 @@ namespace SnivellingGit.LayoutEngine
             if (AlwaysShowMasterFirst && master != null)
             {
                 var masterTide = GetTide(master);
-                var masterIter = HistoryCache.StartFrom(master.Tip);
+                var masterIter = cache.StartFrom(master.Tip);
                 foreach (var commit in masterIter)
                 {
                     if (table.AddCommit(CommitPoint.FromGitCommit(commit), "master", masterTide)) break;
@@ -53,7 +55,7 @@ namespace SnivellingGit.LayoutEngine
             }
 
             var headTide = GetTide(repo.Head);
-            var headIter = HistoryCache.StartFrom(repo.Head.Tip);
+            var headIter = cache.StartFrom(repo.Head.Tip);
             foreach (var commit in headIter)
             {
                 if (table.AddCommit(CommitPoint.FromGitCommit(commit), "Head", headTide)) break;
@@ -67,7 +69,7 @@ namespace SnivellingGit.LayoutEngine
 
                 var tide = GetTide(branch);
 
-                var iter = HistoryCache.StartFrom(branch.Tip);
+                var iter = cache.StartFrom(branch.Tip);
                 foreach (var commit in iter)
                 {
                     var cp = CommitPoint.FromGitCommit(commit);

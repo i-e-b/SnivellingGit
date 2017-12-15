@@ -6,28 +6,45 @@ using LibGit2Sharp;
 namespace SnivellingGit.LayoutEngine
 {
     /// <summary>
-    /// Stores previously read commit history
+    /// Tool for exploring the history of a repo backed with a cache
     /// </summary>
     public static class HistoryCache {
         
-        // TODO -- need to separate the cache by repo
+        private static readonly Dictionary<string, CacheContainer> containers = new Dictionary<string, CacheContainer>();
+        
+        /// <summary>
+        /// Return a cache container for a repo
+        /// </summary>
+        public static CacheContainer For(IRepository repo) {
+            var key = repo.Info.Path;
+            if (!containers.ContainsKey(key)) {
+                containers.Add(key, new CacheContainer());
+            }
+            return containers[key];
+        }
+    }
 
+    /// <summary>
+    /// Stores previously read commit history
+    /// </summary>
+    public class CacheContainer
+    {
         /// <summary>
         /// Return a cache-backed enumerator for all the parent commits under a child
         /// </summary>
-        public static IEnumerable<Commit> StartFrom(Commit branchTip)
+        public IEnumerable<Commit> StartFrom(Commit branchTip)
         {
-            return new CommitWalker(branchTip);
+            return new CommitWalker(branchTip, this);
         }
 
-        private static readonly Dictionary<string, Commit> cache = new Dictionary<string, Commit>();
-        private static readonly Dictionary<string, string[]> relations = new Dictionary<string, string[]>();
-        private static readonly object Lock = new object();
+        private readonly Dictionary<string, Commit> cache = new Dictionary<string, Commit>();
+        private readonly Dictionary<string, string[]> relations = new Dictionary<string, string[]>();
+        private readonly object Lock = new object();
 
         /// <summary>
         /// Check the cache for an entry
         /// </summary>
-        public static bool TryLookup(string child, out string[] parents) {
+        public bool TryLookup(string child, out string[] parents) {
             parents = null;
             lock (Lock)
             {
@@ -40,12 +57,12 @@ namespace SnivellingGit.LayoutEngine
         /// <summary>
         /// Get an element from the cache
         /// </summary>
-        public static Commit Get(string sha) {return cache[sha]; }
+        public Commit Get(string sha) {return cache[sha]; }
 
         /// <summary>
         /// Add a commit to the cache if it is not already present
         /// </summary>
-        public static void Add(Commit c) {
+        public void Add(Commit c) {
             lock (Lock)
             {
                 if (cache.ContainsKey(c.Sha)) return;
@@ -58,7 +75,7 @@ namespace SnivellingGit.LayoutEngine
         /// <summary>
         /// Returns true if the cache contains a commit for the given hash
         /// </summary>
-        public static bool Has(string sha)
+        public bool Has(string sha)
         {
             return cache.ContainsKey(sha);
         }
@@ -69,6 +86,7 @@ namespace SnivellingGit.LayoutEngine
     /// </summary>
     public class CommitWalker : IEnumerable<Commit>, IEnumerator<Commit>
     {
+        private readonly CacheContainer cache;
         private readonly HashSet<string> seen;
         private readonly Queue<Commit> queue;
 
@@ -76,13 +94,15 @@ namespace SnivellingGit.LayoutEngine
         /// Create an enumerator that follows all parents of a commit
         /// </summary>
         /// <param name="branchTip"></param>
-        public CommitWalker(Commit branchTip)
+        /// <param name="cacheContainer"></param>
+        public CommitWalker(Commit branchTip, CacheContainer cacheContainer)
         {
+            cache = cacheContainer;
             seen = new HashSet<string>();
             queue = new Queue<Commit>();
             queue.Enqueue(branchTip);
             seen.Add(branchTip.Sha);
-            HistoryCache.Add(branchTip);
+            cache.Add(branchTip);
         }
 
         /// <summary>
@@ -106,17 +126,17 @@ namespace SnivellingGit.LayoutEngine
             if (queue.Count < 1) return false;
             var next = queue.Dequeue();
 
-            bool needToRead = !HistoryCache.TryLookup(next.Sha, out var list);
+            bool needToRead = !cache.TryLookup(next.Sha, out var list);
 
             foreach (var sha in list)
             {
                 if (seen.Contains(sha)) continue;
-                if ( ! HistoryCache.Has(sha)) {
+                if ( ! cache.Has(sha)) {
                     needToRead = true;
                     break;
                 }
 
-                queue.Enqueue(HistoryCache.Get(sha));
+                queue.Enqueue(cache.Get(sha));
                 seen.Add(sha);
             }
             if (needToRead)
@@ -127,7 +147,7 @@ namespace SnivellingGit.LayoutEngine
 
                     queue.Enqueue(commit);
                     seen.Add(commit.Sha);
-                    HistoryCache.Add(commit);
+                    cache.Add(commit);
                 }
             }
             Current = next;
