@@ -115,8 +115,8 @@ namespace SnivellingGit.LayoutEngine
                     for (int j = 0; j < left.Length; j++) // for each row
                     {
                         // pack occupancy together
-                        leftOccupation |= left[i];
-                        rightOccupation |= right[i];
+                        leftOccupation |= left[j];
+                        rightOccupation |= right[j];
                     }
                     // add the left and right maximums together
                     columnMaxes[i] = MaxOccupied(leftOccupation) + MaxOccupied(rightOccupation);

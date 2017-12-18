@@ -22,7 +22,7 @@ namespace SnivellingGit
         {
             using (var repo = ObjectFactory.GetInstance<IRepoLoader>().Load("."))
             {
-                var html = ObjectFactory.GetInstance<IPageRenderer>().RenderRepositoryPage(repo, "");
+                var html = ObjectFactory.GetInstance<IPageRenderer>().RenderRepositoryPage(repo, "", 0, 500);
                 Console.WriteLine(html);
             }
         }

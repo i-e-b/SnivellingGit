@@ -41,7 +41,7 @@ namespace SnivellingGit.Interfaces
         /// <summary>
         /// Layout the rows and columns for the current set of commit cells.
         /// </summary>
-        void DoLayout(string primaryReference);
+        void DoLayout(string primaryReference, int rowOffset);
 
         /// <summary>
         /// Return true if the commit is already registered

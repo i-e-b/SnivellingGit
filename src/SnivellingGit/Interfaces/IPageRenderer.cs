@@ -11,12 +11,12 @@ namespace SnivellingGit.Interfaces
         /// <summary>
         /// Render a repository view from the given git repository
         /// </summary>
-        TagContent RenderRepositoryPage(IRepository repo, string flags);
+        TagContent RenderRepositoryPage(IRepository repo, string flags, int startOffset, int rowLimit);
 
         /// <summary>
         /// Render the SVG graph of the repo's history and current branches
         /// </summary>
-        TagContent RenderSvgGraph(IRepository repo);
+        TagContent RenderSvgGraph(IRepository repo, int startOffset, int rowLimit);
 
         /// <summary>
         /// Default false. If true, try to show a branch named 'Master' before all others, including 'HEAD'.

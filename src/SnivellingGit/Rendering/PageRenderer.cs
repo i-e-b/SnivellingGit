@@ -36,13 +36,13 @@ namespace SnivellingGit.Rendering
         /// <summary>
         /// Render the SVG graph of the repo's history and current branches
         /// </summary>
-        public TagContent RenderSvgGraph(IRepository repo)
+        public TagContent RenderSvgGraph(IRepository repo, int startOffset, int rowLimit)
         {
             ICommitGraph table = new ColumnsCommitGraph();
             HistoryWalker.BuildCommitGraph(repo, table, OnlyLocal, AlwaysShowMasterFirst);
 
             var svgRenderer = new SvgRenderer { HideComplexHistory = HideComplexHistory };
-            return svgRenderer.RenderCommitGraphToSvg(table, CommitIdToHilight, rowLimit:1500);
+            return svgRenderer.RenderCommitGraphToSvg(table, CommitIdToHilight, startOffset, rowLimit);
         }
 
         /// <summary>
@@ -57,7 +57,7 @@ namespace SnivellingGit.Rendering
         /// Render a complete HTML page, containing status, controls and an SVG visualisation of the history.
         /// The page scripts included allow interactive partial updates, and must be updated if tag IDs are changed here.
         /// </summary>
-        public TagContent RenderRepositoryPage(IRepository repo, string flags)
+        public TagContent RenderRepositoryPage(IRepository repo, string flags, int startOffset, int rowLimit)
         {
             var doc = WriteHtmlHeader(GitShortPath(repo.Info.Path), out var body);
 
@@ -68,7 +68,7 @@ namespace SnivellingGit.Rendering
             // We must have an existing one on the page to activate the JavaScript click responder;
             // after that, we can update through AJAX calls.
             body.Add(T.g("div", "id", "spacer"));
-            body.Add(T.g("div", "id", "svgHost")[RenderSvgGraph(repo)]);
+            body.Add(T.g("div", "id", "svgHost")[RenderSvgGraph(repo, startOffset, rowLimit)]);
 
             return doc;
         }

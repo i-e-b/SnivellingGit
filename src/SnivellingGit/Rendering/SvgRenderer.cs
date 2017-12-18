@@ -32,11 +32,13 @@ namespace SnivellingGit.Rendering
         /// </summary>
         /// <param name="table">Commit graph to render</param>
         /// <param name="hiliteSha">A SHA hash of a commit to higlight. If null or empty, no node will be highlighted</param>
+        /// <param name="rowStart">Skip this many commits before rendering starts</param>
         /// <param name="rowLimit">Stop rendering history after this many commits</param>
-        public TagContent RenderCommitGraphToSvg(ICommitGraph table, string hiliteSha, int rowLimit)
+        public TagContent RenderCommitGraphToSvg(ICommitGraph table, string hiliteSha, int rowStart, int rowLimit)
         {
+            var rowStartCount = rowStart;
             var content = T.g();
-            table.DoLayout("Head");
+            table.DoLayout("Head", rowStart);
             var cells = table.Cells().ToArray();
 
             var widestLabel = cells.Select(c => GuessStringWidth(10, c.BranchNames.ToArray())).Max();
@@ -49,8 +51,8 @@ namespace SnivellingGit.Rendering
             Func<int, int> labelX = col => finalPlacement.CumulativeWidth(col, cellmarginw, loopSpacing);
 
             // Draw branch lines (overdrawn by nodes)
-            DrawAncestryLines(rowLimit, finalPlacement, table, cellX, cellY); // dummy run to get final positions. Maybe: separate line decisions from writing?
-            content.Add(DrawAncestryLines(rowLimit, loops, table, cellX, cellY));
+            DrawAncestryLines(rowStart, rowLimit, finalPlacement, table, cellX, cellY); // dummy run to get final positions. Maybe: separate line decisions from writing?
+            content.Add(DrawAncestryLines(rowStart, rowLimit, loops, table, cellX, cellY));
 
             
             var rightMostColumnX = cellX(cells.Select(c => c.Column).Max() + 1);
@@ -58,8 +60,16 @@ namespace SnivellingGit.Rendering
             var rightMostEdgeOfSvg = rightMostNodeEdge;
             var bottomEdge = 0;
 
+            if (rowStart > 0) {
+                // draw an indication that history continues
+                content.Add(CommitMessage(rightMostNodeEdge, cellY(0), "fade", "History continued from row "+rowStart));
+            }
+
+
             foreach (var cell in cells)
             {
+                if (rowStartCount-- > 0) continue; // skip until offset found
+
                 if (rowLimit-- == 0) { // draw an indication that history continues
                     content.Add(CommitMessage(rightMostNodeEdge, cellY(cell.Row), "fade", "History continues (row limit reached)"));
                     bottomEdge = cellY(cell.Row + 1);
@@ -164,14 +174,15 @@ namespace SnivellingGit.Rendering
             ];
         }
 
-        private List<TagContent> DrawAncestryLines(int rowLimit, LoopPlacer loops, ICommitGraph graph, Func<int, int> cellX, Func<int, int> cellY)
+        private List<TagContent> DrawAncestryLines(int rowStart, int rowLimit, LoopPlacer loops, ICommitGraph graph, Func<int, int> cellX, Func<int, int> cellY)
         {
             var outp = new List<TagContent>();
             var cells = graph.Cells();
             var occupancy = graph.CellOccupancy();
+            var rowStartCount = rowStart;
             foreach (var cell in cells) // increasing row number
             {
-                if (rowLimit-- == 0) { break; }
+                if (rowStartCount-- > 0) { continue; }
 
                 foreach (var child in cell.ChildCells) // increasing row number
                 {
@@ -179,6 +190,8 @@ namespace SnivellingGit.Rendering
 
                     outp.Add(ConnectCells(loops, graph, child, cell, cellX, cellY, complex));
                 }
+
+                if (rowLimit-- == 0) { break; } // do this at the end so we have a continuation line
             }
             return outp;
         }

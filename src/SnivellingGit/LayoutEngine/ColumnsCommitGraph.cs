@@ -79,11 +79,13 @@ namespace SnivellingGit.LayoutEngine
             if (string.IsNullOrWhiteSpace(commitId)) return;
             _prunableRefs.Add(commitId);
         }
-        
+
         /// <summary>
         /// Layout the rows and columns for the current set of commit cells.
         /// </summary>
-        public void DoLayout(string primaryReference) {
+        /// <param name="primaryReference">The main branch or ref name to start from</param>
+        /// <param name="rowOffset">offset position for paging</param>
+        public void DoLayout(string primaryReference, int rowOffset) {
             cellOccupancy = null;
             var cellSet = _cells.Values.OrderByDescending(c => c.CommitPoint.Date).ToArray();
             var cellLookup = _cells.Values.ToDictionary(c => c.CommitPoint.Id);
@@ -119,12 +121,14 @@ namespace SnivellingGit.LayoutEngine
                 _refColumns[orderedRefs[i]] = i;
             }
 
+            var offset = Math.Max(0, rowOffset - 1);
             foreach (var cell in cellSet)
             {
                 cell.Column = _refColumns[cell.RefLine]; // look up the column for the reference
+                cell.Row = Math.Max(0, cell.Row - offset); // adjust final position
             }
 
-            cellLayoutSet = cellSet;
+            cellLayoutSet = cellSet; // filter out rows before the offset
         }
 
         /// <summary>
@@ -142,7 +146,7 @@ namespace SnivellingGit.LayoutEngine
         {
             if (cellLayoutSet == null)
             {
-                DoLayout("");
+                DoLayout("", 0);
             }
 
             return cellLayoutSet;
@@ -166,7 +170,7 @@ namespace SnivellingGit.LayoutEngine
                 cellOccupancy.Add(i, new BitArray(rowCount, false));
             }
 
-            foreach (var cell in cells)
+            foreach (var cell in cells.Where(c=>c.Row >= 0))
             {
                 cellOccupancy[cell.Column].Set(cell.Row, true);
             }
