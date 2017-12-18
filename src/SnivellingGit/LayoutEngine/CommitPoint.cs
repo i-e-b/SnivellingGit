@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using LibGit2Sharp;
 
@@ -27,14 +28,20 @@ namespace SnivellingGit.LayoutEngine
                 };
         }
 
+        private static readonly Dictionary<string, string> colourCache = new Dictionary<string, string>();
+
         /// <summary>
         /// Make a semi-unique, non-white colour that is constant for any given string
         /// </summary>
         static string MakeCssColour(string name)
         {
+            if (colourCache.ContainsKey(name)) return colourCache[name];
+
             var proposed = ColorHash(name).ToString("X3");
             if (proposed == "FFF") proposed = "CA9";
             if (proposed == "000") proposed = "9CA";
+            
+            colourCache.Add(name, proposed);
             return proposed;
         }
 

@@ -93,7 +93,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="GitCommands\GitAction.cs" />
-    <Compile Include="LayoutEngine\CommitGraph.cs" />
+    <Compile Include="LayoutEngine\ColumnsCommitGraph.cs" />
     <Compile Include="LayoutEngine\CommitPoint.cs" />
     <Compile Include="LayoutEngine\HistoryCache.cs" />
     <Compile Include="Rendering\ControlRenderer.cs" />

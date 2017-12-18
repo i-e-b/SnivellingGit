@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using SnivellingGit.Interfaces;
 using SnivellingGit.LayoutEngine;
 using Tag;
@@ -267,6 +268,7 @@ namespace SnivellingGit.Rendering
             return false;
         }
 
+        private static readonly StringBuilder loopSb = new StringBuilder(100);
         private static TagContent DrawLoop(bool left, int depth, int x, int y1, int y2)
         {
             var offs = (left) ? (-(cellw / 2)) : (cellw / 2);
@@ -285,14 +287,33 @@ namespace SnivellingGit.Rendering
             var yL1 = yLower + upPixDepth;
             var yU1 = yUpper - upPixDepth;
 
-            return T.g("g", "class","cmplx")[
-                T.g("path", "d",
-                    "M"+x_inner+","+yLower+
-                    "q"+pixDepth+" 0 "+pixDepth+" "+upPixDepth+
-                    "L"+x_outer+","+yL1+" "+x_outer+","+yU1+
-                    "q0 "+upPixDepth+" "+(-pixDepth)+" "+upPixDepth
-                )
-            ];
+            loopSb.Clear();
+            loopSb.Append('M');
+            loopSb.Append(x_inner);
+            loopSb.Append(',');
+            loopSb.Append(yLower);
+            loopSb.Append('q');
+            loopSb.Append(pixDepth);
+            loopSb.Append(" 0 ");
+            loopSb.Append(pixDepth);
+            loopSb.Append(' ');
+            loopSb.Append(upPixDepth);
+            loopSb.Append('L');
+            loopSb.Append(x_outer);
+            loopSb.Append(',');
+            loopSb.Append(yL1);
+            loopSb.Append(' ');
+            loopSb.Append(x_outer);
+            loopSb.Append(',');
+            loopSb.Append(yU1);
+            loopSb.Append("q0 ");
+            loopSb.Append(upPixDepth);
+            loopSb.Append(' ');
+            loopSb.Append(-pixDepth);
+            loopSb.Append(' ');
+            loopSb.Append(upPixDepth);
+
+            return T.g("g", "class","cmplx")[ T.g("path", "d", loopSb.ToString()) ];
         }
 
         /// <summary>
