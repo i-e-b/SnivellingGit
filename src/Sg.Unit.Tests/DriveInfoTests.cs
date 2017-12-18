@@ -5,7 +5,7 @@
     using NUnit.Framework;
 
     [TestFixture]
-    public class DriveInfo
+    public class DriveInfoTests
     {
         [Test]
         public void logical_drive_names_call_gives_letter_colon_backslash()

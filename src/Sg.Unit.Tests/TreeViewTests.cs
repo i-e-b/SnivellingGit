@@ -6,7 +6,6 @@ namespace Sg.Unit.Tests
     using System;
     using System.Linq;
     using NUnit.Framework;
-    using SnivellingGit;
 
     [TestFixture]
     public class TreeViewTests
