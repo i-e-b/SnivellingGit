@@ -7,6 +7,7 @@ Remember to include a path to your target git directory (i.e. `C:\Work\MyProj` w
 
 ### To do
 
+* If a history line goes off the page, draw a continuation arrow
 
 ### Goals
 

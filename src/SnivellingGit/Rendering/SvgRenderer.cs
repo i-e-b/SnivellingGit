@@ -65,6 +65,7 @@ namespace SnivellingGit.Rendering
                 content.Add(PagingControl(rightMostNodeEdge, cellY(0), "PageUp", false));
                 content.Add(CommitMessage(rightMostNodeEdge, cellY(0), "fade", "History continued from row "+rowStart));
             }
+            var rowEnd = rowStart + rowLimit;
 
 
             foreach (var cell in cells)
@@ -73,7 +74,7 @@ namespace SnivellingGit.Rendering
 
                 if (rowLimit-- == 0) { // draw an indication that history continues
                     content.Add(PagingControl(rightMostNodeEdge, cellY(cell.Row), "PageDown", true));
-                    content.Add(CommitMessage(rightMostNodeEdge, cellY(cell.Row), "fade", "History continues (row limit reached)"));
+                    content.Add(CommitMessage(rightMostNodeEdge, cellY(cell.Row), "fade", "History continues (row "+rowEnd+")"));
                     bottomEdge = cellY(cell.Row + 1);
                     break;
                 }
