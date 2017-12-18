@@ -7,7 +7,6 @@ Remember to include a path to your target git directory (i.e. `C:\Work\MyProj` w
 
 ### To do
 
-* Paging for long history (start offset in addition to row limit)
 
 ### Goals
 

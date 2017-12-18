@@ -23,9 +23,21 @@ function svgElementClicked(e, btn, loc) {
         delete QueryString.show; // de-select
         loadGraph();
         loadHeaders();
+    } else if (e.id === "PageUp" || e.id === "PageDown") {
+        UpdatePaging(e.id);
     } else {
         return; // a real click, but not on anything interesting
     }
+}
+
+function UpdatePaging(dir) {
+    var offs = (QueryString["limit"] || 500) | 0;
+    offs = Math.max(1, offs / 2);
+    if (dir === "PageUp") offs = -offs;
+
+
+    QueryString["start"] = Math.max(0, (QueryString["start"]|0) + offs);
+    loadGraph();
 }
 
 function selectCommit(shaId) {

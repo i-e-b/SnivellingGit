@@ -62,6 +62,7 @@ namespace SnivellingGit.Rendering
 
             if (rowStart > 0) {
                 // draw an indication that history continues
+                content.Add(PagingControl(rightMostNodeEdge, cellY(0), "PageUp", false));
                 content.Add(CommitMessage(rightMostNodeEdge, cellY(0), "fade", "History continued from row "+rowStart));
             }
 
@@ -71,6 +72,7 @@ namespace SnivellingGit.Rendering
                 if (rowStartCount-- > 0) continue; // skip until offset found
 
                 if (rowLimit-- == 0) { // draw an indication that history continues
+                    content.Add(PagingControl(rightMostNodeEdge, cellY(cell.Row), "PageDown", true));
                     content.Add(CommitMessage(rightMostNodeEdge, cellY(cell.Row), "fade", "History continues (row limit reached)"));
                     bottomEdge = cellY(cell.Row + 1);
                     break;
@@ -139,6 +141,25 @@ namespace SnivellingGit.Rendering
                 T.g("circle", "id", id, "cx", "0", "cy", "0", "r", "7")[
                     T.g("title")[title]
                 ]
+            ];
+        }
+
+        private TagContent PagingControl(int x, int y, string id, bool down)
+        {
+            string transform;
+            if (down) transform = "translate(" + (x - 6) + "," + (y + 6) + ") scale(1,-1)";
+            else transform = "translate(" + (x - 6) + "," + (y - 6) + ")";
+
+            return T.g("g", "class", "paging", "transform", transform)[
+                T.g("circle", "id", id,
+                    "style","fill:#fff;fill-opacity:1;stroke:none;",
+                    "cx", "6", "cy", "6", "r", "7")[
+                    T.g("title")["Page Up (more recent)"]
+                ],
+                T.g("path/", 
+                    "id", id,
+                    "style", "fill:#000;fill-opacity:1;stroke:none;",
+                    "d", "M 6,0 A 6,6 0 0 0 0,6 6,6 0 0 0 6,12 6,6 0 0 0 12,6 6,6 0 0 0 6,0 Z M 6,1.25 11,5 H 8 V 11 H 4 V 5 H 1.25 Z")
             ];
         }
 
