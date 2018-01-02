@@ -18,7 +18,7 @@ text { font-weight: 300; font-family: Helvetica, Arial, sans-serf; font-size: 10
 .paging { cursor:pointer; }
 .node rect { stroke-width: 2px; stroke: #333; fill: #fff; opacity: 1; cursor:pointer;}
 .merge circle { stroke-width: 2px; stroke: #bbb; fill: #fff; opacity: 1; cursor:pointer;}
-.blink { animation-name: blink; animation-duration: 1s; animation-iteration-count: infinite; }
+.blink { animation: blink 1s steps(5) infinite; }
 @keyframes blink {
     0%  { opacity:0.9 }
     50% { opacity:0.3 }
@@ -28,6 +28,12 @@ text { font-weight: 300; font-family: Helvetica, Arial, sans-serf; font-size: 10
 body { background: #f7f7f7; }
 p {font-size:12px;}
 a, a:link, a:visited, a:hover, a:active {color: #000; text-decoration: underline; font-family: monospace; font-size:11px;}
+
+#context-menu {
+    top: 10px; left: 10px;
+    position: absolute;
+    z-index: 1999;
+}
 
 #controlHost {
     position: fixed;

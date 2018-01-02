@@ -70,6 +70,8 @@ namespace SnivellingGit.Rendering
             body.Add(T.g("div", "id", "spacer"));
             body.Add(T.g("div", "id", "svgHost")[RenderSvgGraph(repo, startOffset, rowLimit)]);
 
+            body.Add(T.g("div", "id", "context-menu")[""]);
+
             return doc;
         }
 

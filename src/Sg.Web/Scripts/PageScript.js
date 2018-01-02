@@ -17,8 +17,15 @@ var QueryString = function () {
 // This function is triggered by the SVG script in "SvgEmbeddedScript.js"
 // e -> element clicked; btn -> mouse button pressed: 'left' or 'right'; loc -> {x,y} on page where the click happened
 function svgElementClicked(e, btn, loc) {
+
     if (e && e.id && e.id.length > 20) {
-        selectCommit(e.id);
+        if (btn === "right" && loc) {
+            var x = document.getElementById("context-menu");
+            x.style.left = loc.x + "px";
+            x.style.top = loc.y + "px";
+        } else {
+            selectCommit(e.id);
+        }
     } else if (e == null) {
         delete QueryString.show; // de-select
         loadGraph();
