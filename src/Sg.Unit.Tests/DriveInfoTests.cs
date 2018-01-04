@@ -20,7 +20,5 @@
                 Assert.That(drive.Substring(1), Is.EqualTo(":\\"));
             }
         }
-
-         
     }
 }

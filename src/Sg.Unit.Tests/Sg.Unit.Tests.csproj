@@ -74,6 +74,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="CommitPointTests.cs" />
     <Compile Include="DriveInfoTests.cs" />
     <Compile Include="LoopPlacerTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

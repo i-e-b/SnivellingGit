@@ -73,7 +73,7 @@ namespace SnivellingGit.LayoutEngine
         public CommitPoint(string id, string message, DateTimeOffset when, string[] parents)
         {
             Id = id;
-            Message = message;
+            Message = message.Replace("<","&lt;").Replace(">", "&gt;");
             Parents = parents;
             Date = when;
         }
@@ -84,7 +84,7 @@ namespace SnivellingGit.LayoutEngine
         public string[] Parents { get; set; }
 
         /// <summary>
-        /// Commit message
+        /// Commit message, HTML encoded
         /// </summary>
         public string Message { get; set; }
 
