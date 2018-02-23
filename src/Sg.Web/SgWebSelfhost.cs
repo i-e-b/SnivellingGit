@@ -143,13 +143,35 @@ namespace Sg.Web
 
         private static string NoSuchRepoPage(string repoPath)
         {
-            // TODO: a navigation page from here?
-            var sb = new StringBuilder();
-            sb.Append("<html><head><title>Not Found</title></head><body>");
-            sb.Append("<h1>Not found</h1>");
-            sb.Append("<p>The path at '"+repoPath+"' either does not exist, or is not part of a git repository</p>");
-            sb.Append("</body></html>");
-            return sb.ToString();
+            var body = T.g("body");
+
+            if (Directory.Exists(repoPath)) { // navigation controls
+                var list = T.g("ul");
+                var up = Path.GetDirectoryName(repoPath);
+                if (up != null) list.Add (T.g("ol")["↩", T.g("a", "href",up)["Up"], T.g("br/")]);
+
+                foreach (var dir in Directory.GetDirectories(repoPath)) {
+                    var downName = Path.GetFileName(dir);
+                    list.Add(T.g("ol")[T.g("a", "href",dir)[downName]]);
+                }
+
+                body.Add(
+                    T.g("h1")["Navigation"],
+                    T.g("p")[repoPath],
+                    list
+                );
+            } else { // Not found message
+                body.Add(
+                    T.g("h1")["Not found"],
+                    T.g("p")["The path at '"+repoPath+"' either does not exist, or you don't have permission to view it"]
+                );
+            }
+
+            var page = T.g("html")[
+                T.g("head")[T.g("title")["No git repo found"]],
+                body
+            ];
+            return page.ToString();
         }
 
         static void WriteIcon(HttpListenerResponse rawResponse)
