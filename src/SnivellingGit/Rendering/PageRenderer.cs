@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 using System.Linq;
 using LibGit2Sharp;
 using SnivellingGit.Interfaces;
@@ -91,13 +92,18 @@ namespace SnivellingGit.Rendering
                 T.g("html")[
                     T.g("head")[
                             T.g("title")[pathName + " Log"],
-                            T.g("style").LoadFile("Styles/PageStyle.css")
+                            T.g("style")[LoadFile("Styles/PageStyle.css")]
                         ]
                     ];
-            body = T.g("body")[T.g("script").LoadFile("Scripts/PageScript.js")];
+            body = T.g("body")[T.g("script")[LoadFile("Scripts/PageScript.js")]];
             html.Add(body);
 
             return html;
+        }
+
+        private static string LoadFile(string path)
+        {
+            return File.ReadAllText(path);
         }
     }
 }

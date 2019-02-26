@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using SnivellingGit.Interfaces;
@@ -118,11 +119,16 @@ namespace SnivellingGit.Rendering
                     T.g("marker", "id","dot", "viewbox","-10 -10 20 20", "refX","0", "refY","0", "markerUnits","strokeWidth", "markerWidth","10", "markerHeight","10", "orient","auto", "style","fill:#333")[
                         T.g("circle", "cx","0", "cy","0", "r","3")
                     ],
-                    T.g("script").LoadFile("Scripts/SvgEmbeddedScript.js")
+                    T.g("script")[LoadFile("Scripts/SvgEmbeddedScript.js")]
                 ]
             ];
 
             return T.g("svg", "id", "svgroot", "width", width + "px", "height", height + "px", "onload","inject()")[rootElement];
+        }
+
+        private string LoadFile(string path)
+        {
+            return File.ReadAllText(path);
         }
 
         private TagContent CommitNode(bool isTracked, int x, int y, string id, string styleClass, string color, string title)
