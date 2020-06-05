@@ -19,7 +19,7 @@ namespace Sg.Web
         static void Main()
         {
             const string listen = "http://localhost:8080/";
-            SnivellingGit.Configure();
+            Entry.Configure();
 
             using (new WebServer(SendResponse, listen))
             {

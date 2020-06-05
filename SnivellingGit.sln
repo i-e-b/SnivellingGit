@@ -14,6 +14,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "_Info", "_Info", "{941BA215
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Sg.Web", "src\Sg.Web\Sg.Web.csproj", "{D4CB402E-A876-4FAD-84A6-BD163E15E154}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Sg.Terminal", "Sg.Terminal\Sg.Terminal.csproj", "{548C28B9-E86F-4DA0-996B-311BC582E5DF}"
+EndProject
 Global
 	GlobalSection(Performance) = preSolution
 		HasPerformanceSessions = true
@@ -42,6 +44,12 @@ Global
 		{D4CB402E-A876-4FAD-84A6-BD163E15E154}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{D4CB402E-A876-4FAD-84A6-BD163E15E154}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{D4CB402E-A876-4FAD-84A6-BD163E15E154}.Release|Any CPU.Build.0 = Release|Any CPU
+		{548C28B9-E86F-4DA0-996B-311BC582E5DF}.AppVeyor|Any CPU.ActiveCfg = Debug|Any CPU
+		{548C28B9-E86F-4DA0-996B-311BC582E5DF}.AppVeyor|Any CPU.Build.0 = Debug|Any CPU
+		{548C28B9-E86F-4DA0-996B-311BC582E5DF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{548C28B9-E86F-4DA0-996B-311BC582E5DF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{548C28B9-E86F-4DA0-996B-311BC582E5DF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{548C28B9-E86F-4DA0-996B-311BC582E5DF}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

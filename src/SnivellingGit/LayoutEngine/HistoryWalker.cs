@@ -14,6 +14,7 @@ namespace SnivellingGit.LayoutEngine
         /// </summary>
         public static void BuildCommitGraph(IRepository repo, ICommitGraph table, bool OnlyLocal, bool AlwaysShowMasterFirst)
         {
+            if (repo == null) return;
             if (repo.Head == null || repo.Head.Tip == null)
             {
                 table.AddCommit(new CommitPoint("0", "Empty Repo", DateTimeOffset.Now, new string[0]), "Empty", "");

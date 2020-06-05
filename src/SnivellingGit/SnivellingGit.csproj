@@ -9,7 +9,7 @@
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>SnivellingGit</RootNamespace>
-    <AssemblyName>sg</AssemblyName>
+    <AssemblyName>SnivellingGit</AssemblyName>
     <TargetFrameworkVersion>v4.6.2</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <PublishUrl>publish\</PublishUrl>
@@ -104,7 +104,7 @@
     <Compile Include="Interfaces\IPageRenderer.cs" />
     <Compile Include="Interfaces\IRepoLoader.cs" />
     <Compile Include="LayoutEngine\LoopPlacer.cs" />
-    <Compile Include="SnivellingGit.cs" />
+    <Compile Include="Entry.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="RepoLoader.cs" />
     <Compile Include="Rendering\SvgRenderer.cs" />
@@ -134,11 +134,16 @@
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
     <PostBuildEvent>
-if not exist "$(TargetDir)NativeBinaries" md "$(TargetDir)NativeBinaries"
-if not exist "$(TargetDir)NativeBinaries\x86" md "$(TargetDir)NativeBinaries\x86"
-xcopy /s /y /d "$(SolutionDir)packages\LibGit2Sharp.NativeBinaries.2.0.267\runtimes\win-x86\native\*.*" "$(TargetDir)NativeBinaries\x86"
-if not exist "$(TargetDir)NativeBinaries\amd64" md "$(TargetDir)NativeBinaries\amd64"
-xcopy /s /y /d "$(SolutionDir)packages\LibGit2Sharp.NativeBinaries.2.0.267\runtimes\win-x64\native\*.*" "$(TargetDir)NativeBinaries\amd64"
+if not exist "$(TargetDir)NativeBinaries" md "$(TargetDir)NativeBinaries"
+
+if not exist "$(TargetDir)NativeBinaries\x86" md "$(TargetDir)NativeBinaries\x86"
+
+xcopy /s /y /d "$(SolutionDir)packages\LibGit2Sharp.NativeBinaries.2.0.267\runtimes\win-x86\native\*.*" "$(TargetDir)NativeBinaries\x86"
+
+if not exist "$(TargetDir)NativeBinaries\amd64" md "$(TargetDir)NativeBinaries\amd64"
+
+xcopy /s /y /d "$(SolutionDir)packages\LibGit2Sharp.NativeBinaries.2.0.267\runtimes\win-x64\native\*.*" "$(TargetDir)NativeBinaries\amd64"
+
 </PostBuildEvent>
   </PropertyGroup>
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
